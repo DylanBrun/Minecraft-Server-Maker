@@ -13,8 +13,9 @@ class MainForm : Form
     readonly ComboBox versions = new() { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly Button createBtn = new() { Text = "Créer le serveur", AutoSize = true };
     readonly CheckBox buildBox = new() { Text = "Sans server pack (construire depuis la dernière version joueur)", AutoSize = true };
-    readonly ComboBox servers = new() { Width = 360, DropDownStyle = ComboBoxStyle.DropDownList };
+    readonly ComboBox servers = new() { Width = 260, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly Button deleteBtn = new() { Text = "Supprimer", AutoSize = true };
+    readonly Button modsBtn = new() { Text = "Ajouter des mods…", AutoSize = true };
     readonly Button power = new()
     {
         Size = new Size(220, 220), FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
@@ -44,7 +45,7 @@ class MainForm : Form
         apiKey.Text = settings.ApiKey;
 
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
-        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn]);
+        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn, modsBtn]);
         top.SetFlowBreak(buildBox, true);
         top.SetFlowBreak(createBtn, true);
         top.SetFlowBreak(apiKey, true);
@@ -116,6 +117,7 @@ class MainForm : Form
             UpdateUi();
         };
         deleteBtn.Click += async (_, _) => await Run(DeleteServer);
+        modsBtn.Click += async (_, _) => await Run(OpenMods);
 
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
         RefreshServers();
@@ -132,6 +134,16 @@ class MainForm : Form
         if (current != null) servers.SelectedItem = current;
         else if (servers.Items.Count > 0) servers.SelectedIndex = 0;
         else { settings.ServerDir = settings.McVersion = ""; settings.Save(); }
+    }
+
+    Task OpenMods()
+    {
+        int loader = ServerFiles.LoaderOf(settings.ServerDir);
+        if (settings.McVersion == "") throw new Exception("Version de Minecraft de ce serveur inconnue.");
+        if (loader == 0) throw new Exception("Loader de ce serveur non reconnu (Forge, NeoForge, Fabric ou Quilt attendu).");
+        using var form = new ModsForm(Api(), settings.ServerDir, settings.McVersion, loader);
+        form.ShowDialog(this);
+        return Task.CompletedTask;
     }
 
     async Task DeleteServer()
@@ -348,6 +360,7 @@ class MainForm : Form
         power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
         searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
         servers.Enabled = deleteBtn.Enabled = !busy && !running;
+        modsBtn.Enabled = !busy && hasServer;
         addresses.Visible = running;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
         trayToggle.Enabled = power.Enabled;

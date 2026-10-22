@@ -12,6 +12,20 @@ static class ServerFiles
         });
     }
 
+    // Type de loader CurseForge du serveur (1 Forge, 4 Fabric, 5 Quilt, 6 NeoForge ; 0 inconnu), d'après ses fichiers.
+    public static int LoaderOf(string root)
+    {
+        bool Has(string pattern) => Directory.Exists(root) && Directory.GetFiles(root, pattern).Length > 0;
+        bool Dir(params string[] parts) => Directory.Exists(Path.Combine([root, .. parts]));
+        if (Dir("libraries", "net", "neoforged")) return 6;
+        if (Dir("libraries", "net", "minecraftforge") || Has("forge-*.jar")) return 1;
+        if (Has("fabric-server*.jar") || Dir(".fabric")) return 4;
+        if (Has("quilt-server*.jar") || Dir(".quilt")) return 5;
+        return 0;
+    }
+
+    public static readonly Dictionary<int, string> LoaderNames = new() { [1] = "Forge", [4] = "Fabric", [5] = "Quilt", [6] = "NeoForge" };
+
     // Forge : "Crash report saved to", vanilla : "This crash report has been saved to".
     public static bool IsCrash(string? line) =>
         line != null && (line.Contains("rash report") && line.Contains("saved to") || line.Contains("Failed to start the minecraft server"));
