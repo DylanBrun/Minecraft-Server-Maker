@@ -1,3 +1,8 @@
+record ServerItem(string Dir)
+{
+    public override string ToString() => Path.GetFileName(Dir);
+}
+
 class MainForm : Form
 {
     readonly Settings settings = Settings.Load();
@@ -8,6 +13,8 @@ class MainForm : Form
     readonly ComboBox versions = new() { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly Button createBtn = new() { Text = "Créer le serveur", AutoSize = true };
     readonly CheckBox buildBox = new() { Text = "Sans server pack (construire depuis la dernière version joueur)", AutoSize = true };
+    readonly ComboBox servers = new() { Width = 360, DropDownStyle = ComboBoxStyle.DropDownList };
+    readonly Button deleteBtn = new() { Text = "Supprimer", AutoSize = true };
     readonly Button power = new()
     {
         Size = new Size(220, 220), FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
@@ -31,7 +38,8 @@ class MainForm : Form
         apiKey.Text = settings.ApiKey;
 
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
-        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox]);
+        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn]);
+        top.SetFlowBreak(buildBox, true);
         top.SetFlowBreak(createBtn, true);
         top.SetFlowBreak(apiKey, true);
         top.SetFlowBreak(searchBtn, true);
@@ -83,9 +91,43 @@ class MainForm : Form
             if (versions.Items.Count > 0) versions.SelectedIndex = 0;
         };
 
+        servers.SelectedIndexChanged += (_, _) =>
+        {
+            if (servers.SelectedItem is not ServerItem s || ServerFiles.Unwrap(s.Dir) == settings.ServerDir) return;
+            settings.ServerDir = ServerFiles.Unwrap(s.Dir);
+            settings.McVersion = ServerFiles.VersionOf(s.Dir);
+            settings.Save();
+            Log($"Serveur sélectionné : {settings.ServerDir}");
+            UpdateUi();
+        };
+        deleteBtn.Click += async (_, _) => await Run(DeleteServer);
 
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
+        RefreshServers();
         UpdateUi();
+    }
+
+    // Remplit la liste avec les dossiers de servers\ et resélectionne le serveur courant (sinon le premier).
+    void RefreshServers()
+    {
+        var dir = Path.Combine(Settings.DataDir, "servers");
+        servers.Items.Clear();
+        if (Directory.Exists(dir)) servers.Items.AddRange(Directory.GetDirectories(dir).Select(d => new ServerItem(d)).ToArray());
+        var current = servers.Items.Cast<ServerItem>().FirstOrDefault(s => ServerFiles.Unwrap(s.Dir) == settings.ServerDir);
+        if (current != null) servers.SelectedItem = current;
+        else if (servers.Items.Count > 0) servers.SelectedIndex = 0;
+        else { settings.ServerDir = settings.McVersion = ""; settings.Save(); }
+    }
+
+    async Task DeleteServer()
+    {
+        if (servers.SelectedItem is not ServerItem s) return;
+        if (IsRunning) throw new Exception("Arrêtez d'abord le serveur.");
+        if (MessageBox.Show(this, $"Supprimer définitivement le serveur « {s} » ?\n\nSon monde, ses mods et ses réglages seront effacés.",
+                "Supprimer le serveur", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+        await Task.Run(() => Directory.Delete(s.Dir, true));
+        Log($"Serveur supprimé : {s.Dir}");
+        RefreshServers();
     }
 
     // Ferme vraiment l'app (le serveur est arrêté proprement dans OnFormClosing).
@@ -186,6 +228,7 @@ class MainForm : Form
         settings.ServerDir = root;
         settings.McVersion = version;
         settings.Save();
+        RefreshServers();
         Log($"Serveur prêt : {root}");
     }
 
@@ -256,6 +299,7 @@ class MainForm : Form
         power.Text = running ? "ARRÊTER" : "LANCER";
         power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
         searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
+        servers.Enabled = deleteBtn.Enabled = !busy && !running;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
         trayToggle.Enabled = power.Enabled;
         status.Text = busy && running ? "Arrêt en cours…"

@@ -53,6 +53,10 @@ static class ServerFiles
         finally { File.Delete(zip); }
     }
 
+    // Version de MC d'après le nom de dossier créé par l'app : "<slug>-<version>" ou "<slug>-<version>-<fileId>".
+    public static string VersionOf(string dir) =>
+        Regex.Match(Path.GetFileName(dir), @"-(\d+\.\d+(?:\.\d+)?)(?:-\d+)?$").Groups[1].Value;
+
     // Les server packs mettent souvent tout dans un unique dossier racine.
     public static string Unwrap(string dir)
     {

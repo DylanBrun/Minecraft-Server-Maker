@@ -9,6 +9,8 @@ static class SelfTest
             Check(Java.MajorFor(mc) == major, "java pour " + mc);
         Check(IsCrash(@"[main/FATAL] [ne.mi.se.lo.ServerModLoader/]: Crash report saved to .\crash-reports\x.txt"), "crash forge");
         Check(IsCrash("This crash report has been saved to: C:\\x.txt"), "crash vanilla");
+        foreach (var (name, mc) in new[] { ("cobblemon-fabric-1.21.1", "1.21.1"), ("all-the-mods-9-1.20.1", "1.20.1"), ("abyssal-ascent-1.20.1-8950247", "1.20.1"), ("pack-26.3", "26.3") })
+            Check(VersionOf(@"C:\servers\" + name) == mc, "version de " + name);
         foreach (var link in new[] { "https://www.curseforge.com/minecraft/modpacks/abyssal-ascent", "http://curseforge.com/minecraft/modpacks/abyssal-ascent",
                      "www.curseforge.com/minecraft/modpacks/abyssal-ascent/files", "curseforge.com/minecraft/modpacks/abyssal-ascent?page=2",
                      " https://www.curseforge.com/minecraft/modpacks/abyssal-ascent/ " })
