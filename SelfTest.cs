@@ -23,6 +23,8 @@ static class SelfTest
         Check(CurseForge.Slugify("Abyssal Ascent") == "abyssal-ascent", "slug simple");
         Check(CurseForge.Slugify(" All the Mods 9 - ATM9 ") == "all-the-mods-9-atm9", "slug avec tirets");
         Check(!IsCrash("[Server thread/INFO]: Done (6.407s)! For help, type \"help\""), "pas un crash");
+        Check(Sha1Of(JsonNode.Parse("""{"hashes":[{"value":"md5","algo":2},{"value":"abc123","algo":1}]}""")!) == "abc123", "sha1 lu");
+        Check(Sha1Of(JsonNode.Parse("""{"hashes":[]}""")!) == null, "sha1 absent");
         var protectedKey = new Settings { ApiKey = "$2a$10$test" }.ApiKeyProtected;
         Check(!protectedKey.Contains("test") && new Settings { ApiKeyProtected = protectedKey }.ApiKey == "$2a$10$test", "clé chiffrée puis relue");
         Check(JsonSerializer.Deserialize<Settings>("""{"ApiKey":"ancienne"}""")!.ApiKey == "ancienne", "ancienne clé en clair relue");
