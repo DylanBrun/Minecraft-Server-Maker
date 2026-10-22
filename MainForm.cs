@@ -21,6 +21,12 @@ class MainForm : Form
         Font = new Font("Segoe UI", 22, FontStyle.Bold), Anchor = AnchorStyles.None, Cursor = Cursors.Hand,
     };
     readonly Label status = new() { Dock = DockStyle.Bottom, Height = 28, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+    // TextBox en lecture seule plutôt qu'un Label : on peut sélectionner et copier une adresse.
+    readonly TextBox addresses = new()
+    {
+        Dock = DockStyle.Bottom, Multiline = true, ReadOnly = true, BorderStyle = BorderStyle.None,
+        TextAlign = HorizontalAlignment.Center, Visible = false, TabStop = false,
+    };
     readonly TextBox log = new() { Dock = DockStyle.Bottom, Height = 170, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Consolas", 8.5f) };
     readonly NotifyIcon tray = new() { Icon = SystemIcons.Application, Visible = true };
     readonly ToolStripMenuItem trayToggle = new();
@@ -58,6 +64,15 @@ class MainForm : Form
             power.Region = new Region(round);
         };
         power.FlatAppearance.BorderSize = 0;
+        // Le bouton suit la place disponible (la liste d'adresses en prend quand le serveur tourne).
+        center.SizeChanged += (_, _) =>
+        {
+            int d = Math.Clamp(Math.Min(center.ClientSize.Width, center.ClientSize.Height) - 16, 90, 240);
+            power.Size = new Size(d, d);
+            var old = power.Font;
+            power.Font = new Font(old.FontFamily, d / 7.5f, FontStyle.Bold, GraphicsUnit.Pixel);
+            old.Dispose();
+        };
 
         var file = new ToolStripMenuItem("&Fichier");
         file.DropDownItems.Add("Ouvrir le dossier du serveur", null, (_, _) =>
@@ -70,7 +85,7 @@ class MainForm : Form
         menuBar.Items.Add(file);
         MainMenuStrip = menuBar;
 
-        Controls.AddRange([center, status, log, top, menuBar]); // ordre inverse du docking
+        Controls.AddRange([center, addresses, status, log, top, menuBar]); // ordre inverse du docking
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Ouvrir", null, (_, _) => ShowWindow());
@@ -245,6 +260,39 @@ class MainForm : Form
         online = false;
         server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }));
         Log($"Démarrage : {script}");
+        _ = ShowAddresses();
+    }
+
+    async Task ShowAddresses()
+    {
+        var props = Path.Combine(settings.ServerDir, "server.properties");
+        var port = File.Exists(props) ? File.ReadLines(props).FirstOrDefault(l => l.StartsWith("server-port="))?["server-port=".Length..].Trim() : null;
+        if (string.IsNullOrEmpty(port)) port = "25565";
+
+        var lines = new List<string> { "Adresses pour se connecter :", $"Ce PC : localhost:{port}" };
+        lines.AddRange(NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses
+                .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork && !a.Address.ToString().StartsWith("169.254."))
+                .Select(a => $"{n.Name} : {a.Address}:{port}")));
+        SetAddresses(lines);
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            if (IPAddress.TryParse((await http.GetStringAsync("https://api.ipify.org")).Trim(), out var ip))
+            {
+                lines.Add($"Internet : {ip}:{port} (si le port {port} est ouvert sur la box)");
+                SetAddresses(lines);
+            }
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException) { } // hors ligne : on garde les adresses locales
+    }
+
+    void SetAddresses(List<string> lines)
+    {
+        addresses.Text = string.Join(Environment.NewLine, lines);
+        addresses.Height = (lines.Count + 1) * addresses.Font.Height;
     }
 
     // Lance un .bat en arrière-plan avec le bon Java en tête du PATH ; sa sortie va dans le journal.
@@ -300,6 +348,7 @@ class MainForm : Form
         power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
         searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
         servers.Enabled = deleteBtn.Enabled = !busy && !running;
+        addresses.Visible = running;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
         trayToggle.Enabled = power.Enabled;
         status.Text = busy && running ? "Arrêt en cours…"
