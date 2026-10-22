@@ -23,6 +23,10 @@ static class SelfTest
         Check(CurseForge.Slugify("Abyssal Ascent") == "abyssal-ascent", "slug simple");
         Check(CurseForge.Slugify(" All the Mods 9 - ATM9 ") == "all-the-mods-9-atm9", "slug avec tirets");
         Check(!IsCrash("[Server thread/INFO]: Done (6.407s)! For help, type \"help\""), "pas un crash");
+        var protectedKey = new Settings { ApiKey = "$2a$10$test" }.ApiKeyProtected;
+        Check(!protectedKey.Contains("test") && new Settings { ApiKeyProtected = protectedKey }.ApiKey == "$2a$10$test", "clé chiffrée puis relue");
+        Check(JsonSerializer.Deserialize<Settings>("""{"ApiKey":"ancienne"}""")!.ApiKey == "ancienne", "ancienne clé en clair relue");
+        Check(!JsonSerializer.Serialize(new Settings { ApiKey = "secret" }).Contains("secret"), "clé jamais écrite en clair");
 
         var tmp = Path.Combine(Path.GetTempPath(), "mcst-" + Guid.NewGuid());
         var inner = Directory.CreateDirectory(Path.Combine(tmp, "Pack Server")).FullName;
