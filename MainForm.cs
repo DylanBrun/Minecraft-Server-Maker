@@ -113,9 +113,18 @@ class MainForm : Form
             if (MessageBox.Show(this, "Un serveur Minecraft nécessite d'accepter le CLUF (EULA) de Minecraft :\nhttps://aka.ms/MinecraftEULA\n\nL'acceptez-vous ?",
                     "EULA Minecraft", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
+            if (serverFile != files[0])
+            {
+                var warning = $"La dernière version du modpack ({files[0]["displayName"]}) n'a pas de server pack.\n" +
+                              $"Le serveur sera en « {serverFile["displayName"]} » : les joueurs doivent installer cette même version dans CurseForge.";
+                Log("ATTENTION : " + warning.Replace("\n", " "));
+                if (MessageBox.Show(this, warning + "\n\nContinuer ?", "Version du modpack", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            }
+
             var sp = await api.ServerPackOf(serverFile);
             Log($"Téléchargement et extraction de {sp["fileName"]}…");
             await ServerFiles.Install(CurseForge.DownloadUrl(sp), dir);
+            Log($"Les joueurs doivent avoir la version « {serverFile["displayName"]} » du modpack.");
         }
 
         var root = ServerFiles.Unwrap(dir);
