@@ -84,8 +84,11 @@ class MainForm : Form
         var hideOnStart = new ToolStripMenuItem("Réduire dans la barre des tâches au lancement du serveur")
             { CheckOnClick = true, Checked = settings.HideOnStart };
         hideOnStart.CheckedChanged += (_, _) => { settings.HideOnStart = hideOnStart.Checked; settings.Save(); };
+        var autoRadmin = new ToolStripMenuItem("Lancer et activer Radmin VPN au démarrage du serveur")
+            { CheckOnClick = true, Checked = settings.AutoRadmin };
+        autoRadmin.CheckedChanged += (_, _) => { settings.AutoRadmin = autoRadmin.Checked; settings.Save(); };
         var prefs = new ToolStripMenuItem("&Paramètres");
-        prefs.DropDownItems.Add(hideOnStart);
+        prefs.DropDownItems.AddRange([hideOnStart, autoRadmin]);
         file.DropDownItems.Add(prefs);
         file.DropDownItems.Add(new ToolStripSeparator());
         file.DropDownItems.Add("Quitter", null, (_, _) => Quit());
@@ -287,8 +290,28 @@ class MainForm : Form
         online = false;
         server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart);
         Log($"Démarrage : {script}");
-        _ = ShowAddresses();
         if (settings.HideOnStart) HideToTray("Le serveur démarre en arrière-plan.");
+        if (settings.AutoRadmin) await EnsureRadmin();
+        _ = ShowAddresses(); // après Radmin, pour que son adresse soit listée
+    }
+
+    async Task EnsureRadmin()
+    {
+        var gui = Radmin.GuiPath();
+        if (gui == null)
+        {
+            Log("Radmin VPN n'est pas installé sur ce PC (https://www.radmin-vpn.com) : le serveur démarre sans.");
+            tray.ShowBalloonTip(4000, "Radmin VPN introuvable", "Installez Radmin VPN ou désactivez l'option dans Fichier > Paramètres.", ToolTipIcon.Warning);
+            return;
+        }
+        // Lance Radmin s'il est fermé, ou ramène sa fenêtre au premier plan s'il tourne déjà.
+        Process.Start(new ProcessStartInfo(gui, "/show") { UseShellExecute = true });
+        Log("Radmin VPN ouvert.");
+        for (int i = 0; i < 20 && !Radmin.Connected(); i++) await Task.Delay(1000);
+        if (Radmin.Connected()) { Log("Radmin VPN est actif."); return; }
+        // Son bouton d'alimentation n'a ni commande ni réglage modifiable sans droits administrateur.
+        Log("Radmin VPN est éteint : cliquez sur son bouton d'alimentation pour l'activer.");
+        tray.ShowBalloonTip(5000, "Radmin VPN est éteint", "Cliquez sur le bouton d'alimentation de Radmin VPN pour l'activer.", ToolTipIcon.Warning);
     }
 
     // Cache toutes les fenêtres de l'app ; elle reste accessible par l'icône près de l'horloge.
