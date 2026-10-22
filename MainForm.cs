@@ -80,6 +80,12 @@ class MainForm : Form
         {
             if (Directory.Exists(settings.ServerDir)) Process.Start(new ProcessStartInfo(settings.ServerDir) { UseShellExecute = true });
         });
+        var hideOnStart = new ToolStripMenuItem("Réduire dans la barre des tâches au lancement du serveur")
+            { CheckOnClick = true, Checked = settings.HideOnStart };
+        hideOnStart.CheckedChanged += (_, _) => { settings.HideOnStart = hideOnStart.Checked; settings.Save(); };
+        var prefs = new ToolStripMenuItem("&Paramètres");
+        prefs.DropDownItems.Add(hideOnStart);
+        file.DropDownItems.Add(prefs);
         file.DropDownItems.Add(new ToolStripSeparator());
         file.DropDownItems.Add("Quitter", null, (_, _) => Quit());
         var menuBar = new MenuStrip();
@@ -270,9 +276,17 @@ class MainForm : Form
         // Anciennes installs sans version connue : Java du système.
         string? javaBin = settings.McVersion == "" ? null : await Java.Ensure(Java.MajorFor(settings.McVersion));
         online = false;
-        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }));
+        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart);
         Log($"Démarrage : {script}");
         _ = ShowAddresses();
+        if (settings.HideOnStart) HideToTray("Le serveur démarre en arrière-plan.");
+    }
+
+    // Cache toutes les fenêtres de l'app ; elle reste accessible par l'icône près de l'horloge.
+    void HideToTray(string message)
+    {
+        foreach (var f in Application.OpenForms.Cast<Form>().ToList()) f.Hide();
+        tray.ShowBalloonTip(2000, "Serveur Minecraft", message, ToolTipIcon.Info);
     }
 
     async Task ShowAddresses()
@@ -308,9 +322,9 @@ class MainForm : Form
     }
 
     // Lance un .bat en arrière-plan avec le bon Java en tête du PATH ; sa sortie va dans le journal.
-    Process Launch(string script, string? javaBin, Action? onExit = null)
+    Process Launch(string script, string? javaBin, Action? onExit = null, bool nogui = false)
     {
-        var p = new Process { StartInfo = ServerFiles.StartInfo(script, javaBin), EnableRaisingEvents = true };
+        var p = new Process { StartInfo = ServerFiles.StartInfo(script, javaBin, nogui), EnableRaisingEvents = true };
         p.OutputDataReceived += (_, e) => OnServerLine(e.Data);
         p.ErrorDataReceived += (_, e) => OnServerLine(e.Data);
         if (onExit != null) p.Exited += (_, _) => onExit();
@@ -409,8 +423,7 @@ class MainForm : Form
         if (e.CloseReason == CloseReason.UserClosing && !quitting)
         {
             e.Cancel = true;
-            Hide();
-            tray.ShowBalloonTip(2000, "Serveur Minecraft", "L'application continue dans la barre des tâches.", ToolTipIcon.Info);
+            HideToTray("L'application continue dans la barre des tâches.");
             return;
         }
         StopServer().Wait(); // sauvegarde le monde avant de quitter / éteindre Windows
