@@ -456,7 +456,20 @@ class MainForm : Form
         if (e.CloseReason == CloseReason.UserClosing && !quitting)
         {
             e.Cancel = true;
-            HideToTray("L'application continue dans la barre des tâches.");
+            TaskDialogButton yes = new("Oui"), minimize = new("Minimiser"), no = new("Non");
+            var choice = TaskDialog.ShowDialog(this, new TaskDialogPage
+            {
+                Caption = "Minecraft Server Maker",
+                Heading = "Voulez-vous arrêter le logiciel ?",
+                Text = IsRunning ? "Le serveur en cours sera arrêté proprement (monde sauvegardé)."
+                                 : "« Minimiser » le laisse tourner près de l'horloge.",
+                Icon = TaskDialogIcon.Information,
+                Buttons = { yes, minimize, no },
+                DefaultButton = yes,
+                AllowCancel = true, // la croix du message = Non
+            });
+            if (choice == yes) BeginInvoke(Quit); // pas de Close() imbriqué dans l'événement de fermeture
+            else if (choice == minimize) HideToTray("L'application continue dans la barre des tâches.");
             return;
         }
         StopServer().Wait(); // sauvegarde le monde avant de quitter / éteindre Windows
