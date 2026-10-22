@@ -13,9 +13,11 @@ static class SelfTest
             Check(VersionOf(@"C:\servers\" + name) == mc, "version de " + name);
         foreach (var link in new[] { "https://www.curseforge.com/minecraft/modpacks/abyssal-ascent", "http://curseforge.com/minecraft/modpacks/abyssal-ascent",
                      "www.curseforge.com/minecraft/modpacks/abyssal-ascent/files", "curseforge.com/minecraft/modpacks/abyssal-ascent?page=2",
-                     " https://www.curseforge.com/minecraft/modpacks/abyssal-ascent/ " })
+                     "HTTPS://WWW.CurseForge.com/minecraft/modpacks/Abyssal-Ascent", " https://www.curseforge.com/minecraft/modpacks/abyssal-ascent/ " })
             Check(CurseForge.SlugFromLink(link) == "abyssal-ascent", "lien " + link);
         Check(CurseForge.SlugFromLink("Abyssal Ascent") == null, "nom n'est pas un lien");
+        Check(CurseForge.Slugify("Abyssal Ascent") == "abyssal-ascent", "slug simple");
+        Check(CurseForge.Slugify(" All the Mods 9 - ATM9 ") == "all-the-mods-9-atm9", "slug avec tirets");
         Check(!IsCrash("[Server thread/INFO]: Done (6.407s)! For help, type \"help\""), "pas un crash");
 
         var tmp = Path.Combine(Path.GetTempPath(), "mcst-" + Guid.NewGuid());
