@@ -29,6 +29,7 @@ class MainForm : Form
         TextAlign = HorizontalAlignment.Center, Visible = false, TabStop = false,
     };
     readonly TextBox log = new() { Dock = DockStyle.Bottom, Height = 170, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Consolas", 8.5f) };
+    readonly TextBox command = new() { Dock = DockStyle.Bottom, Font = new Font("Consolas", 9f), PlaceholderText = "Commande serveur (ex : op Pseudo, list, say Salut) puis Entrée" };
     readonly NotifyIcon tray = new() { Icon = SystemIcons.Application, Visible = true };
     readonly ToolStripMenuItem trayToggle = new();
     Process? server;
@@ -92,7 +93,15 @@ class MainForm : Form
         menuBar.Items.Add(file);
         MainMenuStrip = menuBar;
 
-        Controls.AddRange([center, addresses, status, log, top, menuBar]); // ordre inverse du docking
+        Controls.AddRange([center, addresses, status, log, command, top, menuBar]); // ordre inverse du docking
+        command.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter || command.Text.Trim() == "" || server is not { HasExited: false } p) return;
+            e.SuppressKeyPress = true;
+            var cmd = command.Text.Trim().TrimStart('/'); // la console du serveur n'attend pas de "/"
+            try { p.StandardInput.WriteLine(cmd); Log("> " + cmd); command.Clear(); }
+            catch (IOException) { Log("Le serveur n'accepte plus de commandes (il s'arrête)."); }
+        };
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Ouvrir", null, (_, _) => ShowWindow());
@@ -376,6 +385,7 @@ class MainForm : Form
         servers.Enabled = deleteBtn.Enabled = !busy && !running;
         modsBtn.Enabled = !busy && hasServer;
         addresses.Visible = running;
+        command.Enabled = running && !busy;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
         trayToggle.Enabled = power.Enabled;
         status.Text = busy && running ? "Arrêt en cours…"
