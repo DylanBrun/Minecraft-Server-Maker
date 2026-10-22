@@ -121,7 +121,21 @@ class MainForm : Form
         var root = ServerFiles.Unwrap(dir);
         if (fresh) File.WriteAllText(Path.Combine(root, "eula.txt"), "eula=true\n");
         if (ServerFiles.FindStartScript(root) == null) throw new Exception($"Aucun script de démarrage (.bat) trouvé dans {root}");
+
+        int major = Java.MajorFor(version);
+        Log($"Préparation de Java {major}…");
+        var javaBin = await Java.Ensure(major);
+        if (fresh)
+            foreach (var installer in Directory.GetFiles(root, "install*.bat"))
+            {
+                Log($"Installation : {Path.GetFileName(installer)} (peut prendre quelques minutes)…");
+                using var p = Launch(installer, javaBin);
+                p.StandardInput.Close();
+                await p.WaitForExitAsync();
+            }
+
         settings.ServerDir = root;
+        settings.McVersion = version;
         settings.Save();
         Log($"Serveur prêt : {root}");
     }
@@ -131,19 +145,20 @@ class MainForm : Form
         if (!busy) _ = Run(IsRunning ? StopServer : StartServer);
     }
 
-    Task StartServer()
+    async Task StartServer()
     {
         var script = ServerFiles.FindStartScript(settings.ServerDir) ?? throw new Exception("Créez d'abord un serveur.");
+        // Anciennes installs sans version connue : Java du système.
+        string? javaBin = settings.McVersion == "" ? null : await Java.Ensure(Java.MajorFor(settings.McVersion));
         online = false;
-        server = Launch(script, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }));
+        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }));
         Log($"Démarrage : {script}");
-        return Task.CompletedTask;
     }
 
-    // Lance un .bat en arrière-plan ; sa sortie va dans le journal.
-    Process Launch(string script, Action? onExit = null)
+    // Lance un .bat en arrière-plan avec le bon Java en tête du PATH ; sa sortie va dans le journal.
+    Process Launch(string script, string? javaBin, Action? onExit = null)
     {
-        var p = new Process { StartInfo = ServerFiles.StartInfo(script), EnableRaisingEvents = true };
+        var p = new Process { StartInfo = ServerFiles.StartInfo(script, javaBin), EnableRaisingEvents = true };
         p.OutputDataReceived += (_, e) => OnServerLine(e.Data);
         p.ErrorDataReceived += (_, e) => OnServerLine(e.Data);
         if (onExit != null) p.Exited += (_, _) => onExit();

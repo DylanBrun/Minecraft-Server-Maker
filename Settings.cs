@@ -2,6 +2,7 @@ class Settings
 {
     public string ApiKey { get; set; } = "";
     public string ServerDir { get; set; } = "";
+    public string McVersion { get; set; } = "";
 
     public static readonly string DataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MCServerTray");
     static string FilePath => Path.Combine(DataDir, "settings.json");

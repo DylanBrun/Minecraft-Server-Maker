@@ -1,6 +1,6 @@
 static class ServerFiles
 {
-    public static ProcessStartInfo StartInfo(string script)
+    public static ProcessStartInfo StartInfo(string script, string? javaBin)
     {
         var psi = new ProcessStartInfo("cmd.exe", $"/c \"{Path.GetFileName(script)}\"")
         {
@@ -9,6 +9,11 @@ static class ServerFiles
             RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
         };
         psi.Environment.Remove("NoDefaultCurrentDirectoryInExePath"); // sinon cmd ne trouve ni start.bat ni les "call settings.bat"
+        if (javaBin != null)
+        {
+            psi.Environment["PATH"] = javaBin + ";" + psi.Environment["PATH"];
+            psi.Environment["JAVA_HOME"] = Path.GetDirectoryName(javaBin);
+        }
         return psi;
     }
 
