@@ -7,6 +7,7 @@ class MainForm : Form
     readonly ComboBox packs = new() { Width = 500, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly ComboBox versions = new() { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly Button createBtn = new() { Text = "Créer le serveur", AutoSize = true };
+    readonly CheckBox buildBox = new() { Text = "Sans server pack (construire depuis la dernière version joueur)", AutoSize = true };
     readonly Button power = new()
     {
         Size = new Size(220, 220), FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
@@ -30,7 +31,8 @@ class MainForm : Form
         apiKey.Text = settings.ApiKey;
 
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
-        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn]);
+        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox]);
+        top.SetFlowBreak(createBtn, true);
         top.SetFlowBreak(apiKey, true);
         top.SetFlowBreak(searchBtn, true);
         top.SetFlowBreak(packs, true);
@@ -102,10 +104,12 @@ class MainForm : Form
 
         var api = Api();
         var files = await api.FilesFor(pack.Id, version);
-        var serverFile = files.FirstOrDefault(CurseForge.HasServerPack)
-            ?? throw new Exception($"Ce modpack ne propose pas de server pack pour Minecraft {version}.");
+        if (files.Count == 0) throw new Exception($"Aucune version de ce modpack pour Minecraft {version}.");
+        bool build = buildBox.Checked;
+        var serverFile = build ? null : files.FirstOrDefault(CurseForge.HasServerPack)
+            ?? throw new Exception($"Ce modpack n'a pas de server pack pour Minecraft {version}.\nCochez « Sans server pack » pour construire le serveur depuis la version joueur.");
 
-        var dir = Path.Combine(Settings.DataDir, "servers", $"{pack.Slug}-{version}");
+        var dir = Path.Combine(Settings.DataDir, "servers", build ? $"{pack.Slug}-{version}-{files[0]["id"]}" : $"{pack.Slug}-{version}");
         bool fresh = !Directory.Exists(dir);
         if (!fresh) Log($"Serveur déjà installé, réutilisé (supprimez le dossier pour le réinstaller) : {dir}");
         else
@@ -113,18 +117,35 @@ class MainForm : Form
             if (MessageBox.Show(this, "Un serveur Minecraft nécessite d'accepter le CLUF (EULA) de Minecraft :\nhttps://aka.ms/MinecraftEULA\n\nL'acceptez-vous ?",
                     "EULA Minecraft", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
-            if (serverFile != files[0])
+            if (serverFile != null && serverFile != files[0])
             {
                 var warning = $"La dernière version du modpack ({files[0]["displayName"]}) n'a pas de server pack.\n" +
-                              $"Le serveur sera en « {serverFile["displayName"]} » : les joueurs doivent installer cette même version dans CurseForge.";
+                              $"Le serveur sera en « {serverFile["displayName"]} » : les joueurs doivent installer cette même version dans CurseForge.\n" +
+                              "(Ou cochez « Sans server pack » pour un serveur dans la dernière version.)";
                 Log("ATTENTION : " + warning.Replace("\n", " "));
                 if (MessageBox.Show(this, warning + "\n\nContinuer ?", "Version du modpack", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             }
 
-            var sp = await api.ServerPackOf(serverFile);
-            Log($"Téléchargement et extraction de {sp["fileName"]}…");
-            await ServerFiles.Install(CurseForge.DownloadUrl(sp), dir);
-            Log($"Les joueurs doivent avoir la version « {serverFile["displayName"]} » du modpack.");
+            try
+            {
+                if (serverFile == null)
+                {
+                    Log($"Construction du serveur « {files[0]["displayName"]} » sans server pack…");
+                    await ServerBuilder.Build(api, files[0], dir, s => Ui(() => Log(s)));
+                }
+                else
+                {
+                    var sp = await api.ServerPackOf(serverFile);
+                    Log($"Téléchargement et extraction de {sp["fileName"]}…");
+                    await ServerFiles.Install(CurseForge.DownloadUrl(sp), dir);
+                }
+            }
+            catch
+            {
+                if (Directory.Exists(dir)) Directory.Delete(dir, true); // installation partielle, créée par nous
+                throw;
+            }
+            Log($"Les joueurs doivent avoir la version « {(serverFile ?? files[0])["displayName"]} » du modpack.");
         }
 
         var root = ServerFiles.Unwrap(dir);
@@ -142,6 +163,7 @@ class MainForm : Form
                 p.StandardInput.Close();
                 await p.WaitForExitAsync();
             }
+        if (fresh && build) await ServerBuilder.TrialBoot(ServerFiles.FindStartScript(root)!, javaBin, s => Ui(() => Log(s)));
 
         settings.ServerDir = root;
         settings.McVersion = version;
@@ -190,6 +212,13 @@ class MainForm : Form
     void OnServerLine(string? line)
     {
         if (line == null) return;
+        if (ServerFiles.IsCrash(line) && server is { HasExited: false } crashed)
+        {
+            try { crashed.StandardInput.Close(); } catch (IOException) { } // débloque le "pause" final du .bat
+            // La JVM peut rester bloquée après un crash ; on lui laisse le temps de sauvegarder puis on la ferme.
+            _ = Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(_ => { if (!crashed.HasExited) crashed.Kill(true); });
+            Ui(() => Log("Le serveur a planté : voir le dossier crash-reports du serveur."));
+        }
         Ui(() =>
         {
             Log(line);
@@ -208,7 +237,7 @@ class MainForm : Form
         power.Enabled = !busy && hasServer;
         power.Text = running ? "ARRÊTER" : "LANCER";
         power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
-        searchBtn.Enabled = createBtn.Enabled = !busy;
+        searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
         trayToggle.Enabled = power.Enabled;
         status.Text = busy && running ? "Arrêt en cours…"
