@@ -1,0 +1,26 @@
+# Sorties de compilation
+bin/
+obj/
+publish/
+*.exe
+*.dll
+*.pdb
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# Fichiers temporaires
+*.tmp
+*.part
+*.log
+
+# Réglages locaux (au cas où un settings.json se retrouve dans le dossier : il contient la clé API)
+settings.json
+
+# Windows
+Thumbs.db
+desktop.ini
