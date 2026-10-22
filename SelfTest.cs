@@ -16,6 +16,10 @@ static class SelfTest
                      "HTTPS://WWW.CurseForge.com/minecraft/modpacks/Abyssal-Ascent", " https://www.curseforge.com/minecraft/modpacks/abyssal-ascent/ " })
             Check(CurseForge.SlugFromLink(link) == "abyssal-ascent", "lien " + link);
         Check(CurseForge.SlugFromLink("Abyssal Ascent") == null, "nom n'est pas un lien");
+        Check(CurseForge.SlugFromLink("https://www.curseforge.com/minecraft/mc-mods/jei", "mc-mods") == "jei", "lien de mod");
+        Check(CurseForge.SlugFromLink("https://www.curseforge.com/minecraft/mc-mods/jei") == null, "lien de mod pris pour un modpack");
+        Check(Fingerprint.Of([]) == 0x5bd15e36, "empreinte vide");
+        Check(Fingerprint.Of("a b\r\nc"u8.ToArray()) == Fingerprint.Of("abc"u8.ToArray()), "empreinte ignore les blancs");
         Check(CurseForge.Slugify("Abyssal Ascent") == "abyssal-ascent", "slug simple");
         Check(CurseForge.Slugify(" All the Mods 9 - ATM9 ") == "all-the-mods-9-atm9", "slug avec tirets");
         Check(!IsCrash("[Server thread/INFO]: Done (6.407s)! For help, type \"help\""), "pas un crash");
@@ -31,6 +35,13 @@ static class SelfTest
             Check(Path.GetFileName(FindStartScript(inner)) == "run.bat", "script suivant");
             File.Delete(Path.Combine(inner, "run.bat"));
             Check(FindStartScript(inner) == null, "aucun lanceur");
+            Check(LoaderOf(inner) == 0, "loader inconnu");
+            File.WriteAllText(Path.Combine(inner, "fabric-server-launch.jar"), "");
+            Check(LoaderOf(inner) == 4, "loader fabric");
+            Directory.CreateDirectory(Path.Combine(inner, "libraries", "net", "minecraftforge"));
+            Check(LoaderOf(inner) == 1, "loader forge");
+            Directory.CreateDirectory(Path.Combine(inner, "libraries", "net", "neoforged"));
+            Check(LoaderOf(inner) == 6, "loader neoforge");
         }
         finally { Directory.Delete(tmp, true); }
     }
