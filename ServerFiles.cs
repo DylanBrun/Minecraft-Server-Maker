@@ -30,9 +30,11 @@ static class ServerFiles
     public static bool IsCrash(string? line) =>
         line != null && (line.Contains("rash report") && line.Contains("saved to") || line.Contains("Failed to start the minecraft server"));
 
-    public static ProcessStartInfo StartInfo(string script, string? javaBin)
+    // nogui : pas de fenêtre "Minecraft server" (transmis au jar par les scripts qui relaient %*, comme le run.bat de Forge).
+    public static ProcessStartInfo StartInfo(string script, string? javaBin, bool nogui = false)
     {
-        var psi = new ProcessStartInfo("cmd.exe", $"/c \"{Path.GetFileName(script)}\"")
+        // Guillemets extérieurs : cmd /c retire la première et la dernière, il reste "script.bat" nogui.
+        var psi = new ProcessStartInfo("cmd.exe", $"/c \"\"{Path.GetFileName(script)}\"{(nogui ? " nogui" : "")}\"")
         {
             WorkingDirectory = Path.GetDirectoryName(script),
             UseShellExecute = false, CreateNoWindow = true,

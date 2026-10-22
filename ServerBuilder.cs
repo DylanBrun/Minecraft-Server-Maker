@@ -51,7 +51,7 @@ static class ServerBuilder
         {
             log($"Essai de démarrage n°{round} (1 à 3 minutes)…");
             var started = DateTime.Now;
-            using var p = Process.Start(ServerFiles.StartInfo(script, javaBin))!;
+            using var p = Process.Start(ServerFiles.StartInfo(script, javaBin, nogui: true))!;
             var done = new TaskCompletionSource();
             var crashed = new TaskCompletionSource();
             DataReceivedEventHandler onLine = (_, e) =>
