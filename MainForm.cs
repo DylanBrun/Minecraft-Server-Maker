@@ -291,7 +291,10 @@ class MainForm : Form
         server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart);
         Log($"Démarrage : {script}");
         if (settings.HideOnStart) HideToTray("Le serveur démarre en arrière-plan.");
-        if (settings.AutoRadmin) await EnsureRadmin();
+        // Le serveur tourne déjà : un souci avec Radmin est signalé sans interrompre la suite.
+        if (settings.AutoRadmin)
+            try { await EnsureRadmin(); }
+            catch (Exception e) { Log("Radmin VPN n'a pas pu être lancé : " + e.Message); }
         _ = ShowAddresses(); // après Radmin, pour que son adresse soit listée
     }
 
@@ -373,7 +376,10 @@ class MainForm : Form
         try { p.StandardInput.WriteLine("stop"); p.StandardInput.Close(); } catch (IOException) { }
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
         try { await p.WaitForExitAsync(timeout.Token).ConfigureAwait(false); }
-        catch (OperationCanceledException) { p.Kill(entireProcessTree: true); }
+        catch (OperationCanceledException)
+        {
+            try { p.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } // s'est arrêté entre-temps
+        }
     }
 
     void OnServerLine(string? line)
@@ -383,7 +389,10 @@ class MainForm : Form
         {
             try { crashed.StandardInput.Close(); } catch (IOException) { } // débloque le "pause" final du .bat
             // La JVM peut rester bloquée après un crash ; on lui laisse le temps de sauvegarder puis on la ferme.
-            _ = Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(_ => { if (!crashed.HasExited) crashed.Kill(true); });
+            _ = Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(_ =>
+            {
+                try { if (!crashed.HasExited) crashed.Kill(true); } catch (InvalidOperationException) { } // s'est arrêté entre-temps
+            });
             Ui(() => Log("Le serveur a planté : voir le dossier crash-reports du serveur."));
         }
         Ui(() =>

@@ -110,9 +110,14 @@ static class ServerBuilder
         return tags.Contains("Client") && !tags.Contains("Server");
     }
 
+    public static bool LoaderPartsValid(string ver, string mc) =>
+        Regex.IsMatch(ver, @"^[0-9A-Za-z.+_-]{1,40}$") && !ver.Contains("..") && Regex.IsMatch(mc, @"^\d+(\.\d+){1,2}$");
+
     static async Task InstallLoader(string loader, string mc, string dir, string xmx)
     {
+        // Valeurs lues dans le manifest du modpack : on n'accepte qu'un format de version avant de les mettre dans une URL.
         int dash = loader.IndexOf('-');
+        if (dash < 1 || !LoaderPartsValid(loader[(dash + 1)..], mc)) throw new Exception($"Version de loader invalide dans le modpack : « {loader} » (Minecraft « {mc} »).");
         string kind = loader[..dash], ver = loader[(dash + 1)..];
         var javaBin = await Java.Ensure(Java.MajorFor(mc));
         using var http = ServerFiles.Downloader();
