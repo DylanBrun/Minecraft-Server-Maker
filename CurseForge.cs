@@ -47,16 +47,21 @@ class CurseForge
         }
         catch (HttpRequestException e) when (e.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
-            throw new Exception("Votre clé API n'a pas accès à la recherche CurseForge.\nCollez plutôt le lien du modpack (curseforge.com/minecraft/modpacks/...) ou son Project ID (visible sur sa page CurseForge).");
+            // Clés récentes sans accès à la recherche : on tente le nom exact sous forme de lien ("Abyssal Ascent" -> abyssal-ascent).
+            return [await BySlug(Slugify(query)) ?? throw new Exception(
+                "Votre clé API n'a pas accès à la recherche CurseForge et aucun modpack ne porte exactement ce nom.\n" +
+                "Collez plutôt le lien du modpack (curseforge.com/minecraft/modpacks/...) ou son Project ID (visible sur sa page CurseForge).")];
         }
     }
 
-    // Partie <slug> d'un lien curseforge.com/minecraft/modpacks/<slug> (avec ou sans https://, www. ou /files).
+    // Avec ou sans https:// et www., majuscules, /files ou ?paramètres à la fin.
     public static string? SlugFromLink(string query)
     {
-        var m = Regex.Match(query, @"curseforge\.com/minecraft/modpacks/([\w-]+)");
-        return m.Success ? m.Groups[1].Value : null;
+        var m = Regex.Match(query, @"curseforge\.com/minecraft/modpacks/([\w-]+)", RegexOptions.IgnoreCase);
+        return m.Success ? m.Groups[1].Value.ToLowerInvariant() : null;
     }
+
+    public static string Slugify(string name) => Regex.Replace(name.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
 
     // L'API officielle ne résout pas un slug sans la recherche ; cfwidget (service tiers, sans clé) le fait.
     async Task<Pack?> BySlug(string slug)
