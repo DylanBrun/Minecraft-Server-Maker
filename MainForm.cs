@@ -51,12 +51,23 @@ class MainForm : Form
         };
         power.FlatAppearance.BorderSize = 0;
 
-        Controls.AddRange([center, status, log, top]); // ordre inverse du docking
+        var file = new ToolStripMenuItem("&Fichier");
+        file.DropDownItems.Add("Ouvrir le dossier du serveur", null, (_, _) =>
+        {
+            if (Directory.Exists(settings.ServerDir)) Process.Start(new ProcessStartInfo(settings.ServerDir) { UseShellExecute = true });
+        });
+        file.DropDownItems.Add(new ToolStripSeparator());
+        file.DropDownItems.Add("Quitter", null, (_, _) => Quit());
+        var menuBar = new MenuStrip();
+        menuBar.Items.Add(file);
+        MainMenuStrip = menuBar;
+
+        Controls.AddRange([center, status, log, top, menuBar]); // ordre inverse du docking
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Ouvrir", null, (_, _) => ShowWindow());
         menu.Items.Add(trayToggle);
-        menu.Items.Add("Quitter", null, (_, _) => { quitting = true; Close(); });
+        menu.Items.Add("Quitter", null, (_, _) => Quit());
         tray.ContextMenuStrip = menu;
         tray.DoubleClick += (_, _) => ShowWindow();
         trayToggle.Click += (_, _) => Toggle();
@@ -75,6 +86,13 @@ class MainForm : Form
 
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
         UpdateUi();
+    }
+
+    // Ferme vraiment l'app (le serveur est arrêté proprement dans OnFormClosing).
+    void Quit()
+    {
+        quitting = true;
+        Close();
     }
 
     static Label Lbl(string text) => new() { Text = text, AutoSize = true, Margin = new Padding(3, 7, 3, 3) };
