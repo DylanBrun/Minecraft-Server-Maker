@@ -1,5 +1,21 @@
 static class ServerFiles
 {
+    public static async Task DownloadMods(IEnumerable<JsonNode> files, string modsDir)
+    {
+        Directory.CreateDirectory(modsDir);
+        using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+        await Parallel.ForEachAsync(files, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async (f, ct) =>
+        {
+            await using var src = await http.GetStreamAsync(CurseForge.DownloadUrl(f), ct);
+            await using var dst = File.Create(Path.Combine(modsDir, Path.GetFileName(f["fileName"]!.GetValue<string>())));
+            await src.CopyToAsync(dst, ct);
+        });
+    }
+
+    // Forge : "Crash report saved to", vanilla : "This crash report has been saved to".
+    public static bool IsCrash(string? line) =>
+        line != null && (line.Contains("rash report") && line.Contains("saved to") || line.Contains("Failed to start the minecraft server"));
+
     public static ProcessStartInfo StartInfo(string script, string? javaBin)
     {
         var psi = new ProcessStartInfo("cmd.exe", $"/c \"{Path.GetFileName(script)}\"")

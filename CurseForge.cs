@@ -11,6 +11,8 @@ class CurseForge
 
     async Task<JsonNode> Get(string path) => await Data(await http.GetAsync(path));
 
+    async Task<JsonNode> Post(string path, object body) => await Data(await http.PostAsJsonAsync(path, body));
+
     static async Task<JsonNode> Data(HttpResponseMessage r)
     {
         using var _ = r;
@@ -74,6 +76,10 @@ class CurseForge
 
     public async Task<JsonNode> ServerPackOf(JsonNode f) =>
         f["isServerPack"]?.GetValue<bool>() == true ? f : await Get($"mods/{f["modId"]}/files/{f["serverPackFileId"]}");
+
+    public async Task<JsonArray> FilesById(IEnumerable<int> ids) => (await Post("mods/files", new { fileIds = ids })).AsArray();
+
+    public async Task<JsonArray> ModsById(IEnumerable<int> ids) => (await Post("mods", new { modIds = ids })).AsArray();
 
     // Certains auteurs bloquent downloadUrl dans l'API ; le chemin CDN reste public.
     public static string DownloadUrl(JsonNode f)
