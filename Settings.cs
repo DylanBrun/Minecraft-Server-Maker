@@ -4,6 +4,7 @@ class Settings
     public string ServerDir { get; set; } = "";
     public string McVersion { get; set; } = "";
     public bool HideOnStart { get; set; } // désactivé par défaut
+    public bool AutoRadmin { get; set; } // désactivé par défaut
 
     public static readonly string DataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MCServerTray");
     static string FilePath => Path.Combine(DataDir, "settings.json");
