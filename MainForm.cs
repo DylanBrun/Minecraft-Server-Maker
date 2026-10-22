@@ -242,7 +242,7 @@ class MainForm : Form
                 {
                     var sp = await api.ServerPackOf(serverFile);
                     Log($"Téléchargement et extraction de {sp["fileName"]}…");
-                    await ServerFiles.Install(CurseForge.DownloadUrl(sp), dir);
+                    await ServerFiles.Install(CurseForge.DownloadUrl(sp), dir, ServerFiles.Sha1Of(sp));
                 }
             }
             catch

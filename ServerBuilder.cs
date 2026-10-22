@@ -4,7 +4,7 @@ static class ServerBuilder
     public static async Task Build(CurseForge cf, JsonNode packFile, string dir, Action<string> log)
     {
         log("Téléchargement de la version joueur…");
-        await ServerFiles.Install(CurseForge.DownloadUrl(packFile), dir);
+        await ServerFiles.Install(CurseForge.DownloadUrl(packFile), dir, ServerFiles.Sha1Of(packFile));
         var manifest = JsonNode.Parse(File.ReadAllText(Path.Combine(dir, "manifest.json")))!;
 
         // overrides/ (config, kubejs, scripts…) va à la racine du serveur
@@ -115,7 +115,7 @@ static class ServerBuilder
         int dash = loader.IndexOf('-');
         string kind = loader[..dash], ver = loader[(dash + 1)..];
         var javaBin = await Java.Ensure(Java.MajorFor(mc));
-        using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+        using var http = ServerFiles.Downloader();
 
         if (kind == "fabric")
         {
