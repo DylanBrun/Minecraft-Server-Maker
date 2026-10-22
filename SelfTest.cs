@@ -23,6 +23,8 @@ static class SelfTest
         Check(CurseForge.Slugify("Abyssal Ascent") == "abyssal-ascent", "slug simple");
         Check(CurseForge.Slugify(" All the Mods 9 - ATM9 ") == "all-the-mods-9-atm9", "slug avec tirets");
         Check(!IsCrash("[Server thread/INFO]: Done (6.407s)! For help, type \"help\""), "pas un crash");
+        Check(ServerBuilder.LoaderPartsValid("47.4.6", "1.20.1") && ServerBuilder.LoaderPartsValid("0.16.10", "1.21") && ServerBuilder.LoaderPartsValid("21.1.77-beta", "1.21.1"), "versions de loader valides");
+        Check(!ServerBuilder.LoaderPartsValid("../../evil", "1.20.1") && !ServerBuilder.LoaderPartsValid("47.4.6", "1.20.1/../x") && !ServerBuilder.LoaderPartsValid("1?x=y", "1.20.1"), "versions de loader piégées refusées");
         Check(Sha1Of(JsonNode.Parse("""{"hashes":[{"value":"md5","algo":2},{"value":"abc123","algo":1}]}""")!) == "abc123", "sha1 lu");
         Check(Sha1Of(JsonNode.Parse("""{"hashes":[]}""")!) == null, "sha1 absent");
         var protectedKey = new Settings { ApiKey = "$2a$10$test" }.ApiKeyProtected;
