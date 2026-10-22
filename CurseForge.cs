@@ -14,7 +14,9 @@ class CurseForge
     static async Task<JsonNode> Data(HttpResponseMessage r)
     {
         using var _ = r;
-        if (!r.IsSuccessStatusCode) throw new Exception($"CurseForge a répondu {(int)r.StatusCode}. Clé API valide ?");
+        if (!r.IsSuccessStatusCode)
+            throw new HttpRequestException(r.StatusCode == System.Net.HttpStatusCode.NotFound ? "Modpack introuvable sur CurseForge."
+                : $"CurseForge a répondu {(int)r.StatusCode}. Clé API valide ?", null, r.StatusCode);
         return JsonNode.Parse(await r.Content.ReadAsStringAsync())!["data"]!;
     }
 
@@ -25,12 +27,42 @@ class CurseForge
         m["latestFilesIndexes"]!.AsArray().Select(i => i!["gameVersion"]!.GetValue<string>()).Distinct()
             .OrderByDescending(v => Version.TryParse(v, out var x) ? x : new Version()).ToArray());
 
-    // Recherche de modpacks par nom, les plus populaires d'abord.
+    public async Task<Pack> GetPack(int id) => ToPack(await Get($"mods/{id}"));
+
+    // Accepte un nom, un Project ID ou un lien curseforge.com/minecraft/modpacks/<slug>.
     public async Task<List<Pack>> Find(string query)
     {
-        // gameId 432 = Minecraft, classId 4471 = Modpacks, sortField 2 = popularité
-        var data = await Get($"mods/search?gameId=432&classId=4471&sortField=2&sortOrder=desc&pageSize=30&searchFilter={Uri.EscapeDataString(query)}");
-        return data.AsArray().Select(m => ToPack(m!)).ToList();
+        if (int.TryParse(query, out var id)) return [await GetPack(id)];
+
+        if (SlugFromLink(query) is string slug)
+            return [await BySlug(slug) ?? throw new Exception("Lien non reconnu. Vérifiez-le, ou collez le Project ID du modpack.")];
+
+        try
+        {
+            // gameId 432 = Minecraft, classId 4471 = Modpacks, sortField 2 = popularité
+            var data = await Get($"mods/search?gameId=432&classId=4471&sortField=2&sortOrder=desc&pageSize=30&searchFilter={Uri.EscapeDataString(query)}");
+            return data.AsArray().Select(m => ToPack(m!)).ToList();
+        }
+        catch (HttpRequestException e) when (e.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            throw new Exception("Votre clé API n'a pas accès à la recherche CurseForge.\nCollez plutôt le lien du modpack (curseforge.com/minecraft/modpacks/...) ou son Project ID (visible sur sa page CurseForge).");
+        }
+    }
+
+    // Partie <slug> d'un lien curseforge.com/minecraft/modpacks/<slug> (avec ou sans https://, www. ou /files).
+    public static string? SlugFromLink(string query)
+    {
+        var m = Regex.Match(query, @"curseforge\.com/minecraft/modpacks/([\w-]+)");
+        return m.Success ? m.Groups[1].Value : null;
+    }
+
+    // L'API officielle ne résout pas un slug sans la recherche ; cfwidget (service tiers, sans clé) le fait.
+    async Task<Pack?> BySlug(string slug)
+    {
+        using var w = new HttpClient();
+        using var r = await w.GetAsync($"https://api.cfwidget.com/minecraft/modpacks/{Uri.EscapeDataString(slug)}");
+        int? found = r.IsSuccessStatusCode ? JsonNode.Parse(await r.Content.ReadAsStringAsync())?["id"]?.GetValue<int>() : null;
+        return found is int id ? await GetPack(id) : null;
     }
 
     // Fichiers (versions) du modpack pour cette version de MC, le plus récent d'abord.

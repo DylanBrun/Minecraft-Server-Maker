@@ -2,7 +2,7 @@ class MainForm : Form
 {
     readonly Settings settings = Settings.Load();
     readonly TextBox apiKey = new() { Width = 360, UseSystemPasswordChar = true };
-    readonly TextBox search = new() { Width = 280, PlaceholderText = "Nom du modpack (ex : All the Mods)" };
+    readonly TextBox search = new() { Width = 280, PlaceholderText = "Nom, lien CurseForge ou Project ID" };
     readonly Button searchBtn = new() { Text = "Rechercher", AutoSize = true };
     readonly ComboBox packs = new() { Width = 500, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly ComboBox versions = new() { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };

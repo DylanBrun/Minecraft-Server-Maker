@@ -7,6 +7,11 @@ static class SelfTest
     {
         foreach (var (mc, major) in new[] { ("1.12.2", 8), ("1.16.5", 8), ("1.18.2", 17), ("1.20.1", 17), ("1.20.5", 21), ("1.21.1", 21), ("1.21", 21), ("26.1", 25) })
             Check(Java.MajorFor(mc) == major, "java pour " + mc);
+        foreach (var link in new[] { "https://www.curseforge.com/minecraft/modpacks/abyssal-ascent", "http://curseforge.com/minecraft/modpacks/abyssal-ascent",
+                     "www.curseforge.com/minecraft/modpacks/abyssal-ascent/files", "curseforge.com/minecraft/modpacks/abyssal-ascent?page=2",
+                     " https://www.curseforge.com/minecraft/modpacks/abyssal-ascent/ " })
+            Check(CurseForge.SlugFromLink(link) == "abyssal-ascent", "lien " + link);
+        Check(CurseForge.SlugFromLink("Abyssal Ascent") == null, "nom n'est pas un lien");
 
         var tmp = Path.Combine(Path.GetTempPath(), "mcst-" + Guid.NewGuid());
         var inner = Directory.CreateDirectory(Path.Combine(tmp, "Pack Server")).FullName;
