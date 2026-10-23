@@ -85,7 +85,7 @@ class CurseForge
             .Select(f => f!).OrderByDescending(f => DateTime.Parse(f["fileDate"]!.GetValue<string>())).ToList();
 
     // Mods déjà présents dans mods/ et mods-desactives/ (projectId -> nom du .jar), reconnus par l'empreinte CurseForge.
-    // shortcut: un .jar qui ne vient pas de CurseForge n'est pas reconnu ; s'il est aussi une dépendance, elle serait téléchargée en double.
+    // Limite : un .jar qui ne vient pas de CurseForge n'est pas reconnu ; s'il est aussi une dépendance, elle serait téléchargée en double.
     public async Task<Dictionary<int, string>> InstalledMods(string root)
     {
         var jars = new[] { "mods", "mods-desactives" }.Select(d => Path.Combine(root, d)).Where(Directory.Exists)

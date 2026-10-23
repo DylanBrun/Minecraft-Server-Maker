@@ -51,7 +51,7 @@ static partial class ServerFiles
         return dir;
     }
 
-    // shortcut: seuls les lanceurs .bat sont gérés ; un pack livré avec juste un jar/installeur demande un script fait main.
+    // Limite : seuls les lanceurs .bat sont gérés ; un pack livré avec juste un jar/installeur demande un script fait main.
     public static string? FindStartScript(string dir)
     {
         if (!Directory.Exists(dir)) return null;

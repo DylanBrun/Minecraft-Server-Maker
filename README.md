@@ -6,18 +6,18 @@ Je l'ai faite pour jouer entre potes sans passer une soirée à installer Forge,
 
 ## Ce qu'elle fait
 
-- **Recherche de modpacks** par nom, par lien CurseForge (`https://www.curseforge.com/minecraft/modpacks/...`) ou par Project ID.
-- **Installe le serveur tout seul** à partir du server pack officiel du modpack. Si la dernière version du pack n'en a pas, l'app prévient et indique la version que les joueurs doivent installer.
-- **Construit le serveur sans server pack** si besoin (case « Sans server pack ») : elle récupère la version joueur, télécharge les mods, écarte ceux qui ne servent qu'au client, installe Forge, NeoForge ou Fabric, puis fait des essais de démarrage en mettant de côté les mods qui font planter le serveur.
-- **Télécharge la bonne version de Java** (8, 17, 21 ou 25 selon la version de Minecraft), uniquement pour le serveur. Pas besoin d'avoir Java installé.
-- **Un gros bouton pour lancer et arrêter** le serveur. L'arrêt passe par la commande `stop`, donc le monde est toujours sauvegardé.
-- **Plusieurs serveurs** : une liste pour passer de l'un à l'autre, et un bouton pour en supprimer un (avec confirmation).
-- **Ajout de mods** compatibles avec la version de Minecraft et le loader du serveur, avec leurs dépendances. Les mods déjà présents ne sont jamais mis à jour.
-- **Les adresses pour se connecter** s'affichent pendant que le serveur tourne : réseau local, Radmin VPN, ZeroTier, Internet.
-- **La RAM de chaque serveur** se règle avec une jauge ou en tapant un nombre (bouton Réglages…). Le bouton Max propose le maximum sans risque pour le PC : la RAM totale moins 8 Go pour Windows et le jeu.
-- **Sauvegardes automatiques du monde** : une copie .zip toutes les 30 minutes pendant que le serveur tourne, les 10 dernières gardées dans le dossier `backups` du serveur. Intervalle et nombre de copies se règlent dans Réglages…, et un opérateur peut les piloter depuis le chat du jeu avec `!ASWorld enable`, `!ASWorld disable` ou `!ASWorld set <minutes>`.
-- **Une console** pour taper des commandes au serveur (`op Pseudo`, `list`, `say Salut`…).
-- **Options** (menu Fichier > Paramètres) : réduire l'app au lancement du serveur, et lancer Radmin VPN automatiquement. Les deux sont désactivées par défaut.
+- Recherche de modpacks par nom, par lien CurseForge (`https://www.curseforge.com/minecraft/modpacks/...`) ou par Project ID.
+- Installe le serveur tout seul à partir du server pack officiel du modpack. Si la dernière version du pack n'en a pas, l'app prévient et indique la version que les joueurs doivent installer.
+- Construit le serveur sans server pack si besoin (case « Sans server pack ») : elle récupère la version joueur, télécharge les mods, écarte ceux qui ne servent qu'au client, installe Forge, NeoForge ou Fabric, puis fait des essais de démarrage en mettant de côté les mods qui font planter le serveur.
+- Télécharge la bonne version de Java (8, 17, 21 ou 25 selon la version de Minecraft), uniquement pour le serveur. Pas besoin d'avoir Java installé.
+- Un gros bouton pour lancer et arrêter le serveur. L'arrêt passe par la commande `stop`, donc le monde est toujours sauvegardé.
+- Plusieurs serveurs : une liste pour passer de l'un à l'autre, et un bouton pour en supprimer un (avec confirmation).
+- Ajout de mods compatibles avec la version de Minecraft et le loader du serveur, avec leurs dépendances. Les mods déjà présents ne sont jamais mis à jour.
+- Les adresses pour se connecter s'affichent pendant que le serveur tourne : réseau local, Radmin VPN, ZeroTier, Internet.
+- La RAM de chaque serveur se règle avec une jauge ou en tapant un nombre (bouton Réglages…). Le bouton Max propose le maximum sans risque pour le PC : la RAM totale moins 8 Go pour Windows et le jeu.
+- Sauvegardes automatiques du monde : une copie .zip toutes les 30 minutes pendant que le serveur tourne, les 10 dernières gardées dans le dossier `backups` du serveur. Intervalle et nombre de copies se règlent dans Réglages…, et un opérateur peut les piloter depuis le chat du jeu avec `!ASWorld enable`, `!ASWorld disable` ou `!ASWorld set <minutes>`.
+- Une console pour taper des commandes au serveur (`op Pseudo`, `list`, `say Salut`…).
+- Options (menu Fichier > Paramètres) : réduire l'app au lancement du serveur, et lancer Radmin VPN automatiquement. Les deux sont désactivées par défaut.
 
 ## Ce qu'il faut
 
