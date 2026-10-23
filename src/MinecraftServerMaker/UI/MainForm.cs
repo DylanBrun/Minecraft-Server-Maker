@@ -17,11 +17,12 @@ partial class MainForm : Form
 
     readonly CheckBox buildBox = new() { Text = "Sans server pack (construire depuis la dernière version joueur)", AutoSize = true };
 
-    readonly ComboBox servers = new() { Width = 260, DropDownStyle = ComboBoxStyle.DropDownList };
+    readonly ComboBox servers = new() { Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
 
     readonly Button deleteBtn = new() { Text = "Supprimer", AutoSize = true };
 
     readonly Button modsBtn = new() { Text = "Ajouter des mods…", AutoSize = true };
+    readonly Button settingsBtn = new() { Text = "Réglages…", AutoSize = true };
 
     readonly Button power = new()
     {
@@ -56,12 +57,12 @@ partial class MainForm : Form
     {
         Text = "Minecraft Server Maker";
         Icon = SystemIcons.Application;
-        ClientSize = new Size(560, 640);
-        MinimumSize = new Size(560, 600);
+        ClientSize = new Size(620, 660);
+        MinimumSize = new Size(620, 620);
         apiKey.Text = settings.ApiKey;
 
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
-        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn, modsBtn]);
+        top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn, modsBtn, settingsBtn]);
         top.SetFlowBreak(buildBox, true);
         top.SetFlowBreak(createBtn, true);
         top.SetFlowBreak(apiKey, true);
@@ -151,6 +152,7 @@ partial class MainForm : Form
         };
         deleteBtn.Click += async (_, _) => await Run(DeleteServer);
         modsBtn.Click += async (_, _) => await Run(OpenMods);
+        settingsBtn.Click += async (_, _) => await Run(OpenSettings);
 
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
         RefreshServers();
@@ -181,7 +183,7 @@ partial class MainForm : Form
         power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
         searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
         servers.Enabled = deleteBtn.Enabled = !busy && !running;
-        modsBtn.Enabled = !busy && hasServer;
+        modsBtn.Enabled = settingsBtn.Enabled = !busy && hasServer;
         addresses.Visible = running;
         command.Enabled = running && !busy;
         trayToggle.Text = running ? "Arrêter le serveur" : "Lancer le serveur";
