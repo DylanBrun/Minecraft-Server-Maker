@@ -13,7 +13,7 @@ partial class MainForm
         string? javaBin = settings.McVersion == "" ? null : await Java.Ensure(Java.MajorFor(settings.McVersion));
         online = false;
         int ramMb = ServerConfig.Load(settings.ServerDir).RamMb;
-        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart, ramMb);
+        server = Launch(script, javaBin, () => Ui(() => { backupTimer.Stop(); Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart, ramMb);
         Log($"Démarrage : {script}" + (ramMb > 0 ? $" ({ramMb / 1024.0:0.#} Go de RAM)" : ""));
         if (settings.HideOnStart) HideToTray("Le serveur démarre en arrière-plan.");
         // Le serveur tourne déjà : un souci avec Radmin est signalé sans interrompre la suite.
@@ -52,6 +52,8 @@ partial class MainForm
     void OnServerLine(string? line)
     {
         if (line == null) return;
+        if (line.Contains("Saved the game") || line.Contains("Saved the world")) savedSignal?.TrySetResult(); // fin du save-all
+        if (ChatCommands.Parse(line) is { } command) Ui(() => HandleAsWorld(command));
         if (ServerFiles.IsCrash(line) && server is { HasExited: false } crashed)
         {
             try { crashed.StandardInput.Close(); } catch (IOException) { } // débloque le "pause" final du .bat
@@ -69,6 +71,7 @@ partial class MainForm
             {
                 online = true;
                 tray.ShowBalloonTip(3000, "Serveur Minecraft", "Le serveur est en ligne.", ToolTipIcon.Info);
+                StartBackupTimer();
                 UpdateUi();
             }
         });
