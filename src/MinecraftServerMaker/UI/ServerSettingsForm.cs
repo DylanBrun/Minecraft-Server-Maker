@@ -19,7 +19,6 @@ class ServerSettingsForm : Form
     {
         Config = ServerConfig.Load(root);
         Text = $"Réglages du serveur — {Path.GetFileName(root)}";
-        Icon = SystemIcons.Application;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
@@ -62,7 +61,7 @@ class ServerSettingsForm : Form
         ]);
         saves.Controls.Add(savesLayout);
 
-        var ok = new Button { Text = "Enregistrer", AutoSize = true, DialogResult = DialogResult.OK };
+        var ok = new Button { Text = "Enregistrer", AutoSize = true, DialogResult = DialogResult.OK, Tag = "primary" };
         var cancel = new Button { Text = "Annuler", AutoSize = true, DialogResult = DialogResult.Cancel };
         var buttons = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Bottom, Padding = new Padding(0, 8, 0, 0) };
         buttons.Controls.AddRange([cancel, ok]);
@@ -83,6 +82,7 @@ class ServerSettingsForm : Form
         minutes.Enabled = keep.Enabled = backup.Checked;
         minutes.Value = Math.Clamp(Config.BackupMinutes, 1, 1440);
         keep.Value = Math.Clamp(Config.BackupsToKeep, 1, 100);
+        Theme.Apply(this);
         ok.Click += (_, _) =>
         {
             Config.RamMb = auto.Checked ? 0 : (int)(box.Value * 1024);
