@@ -58,7 +58,7 @@ dotnet build
 Pour obtenir un seul `.exe` qui marche sans rien installer :
 
 ```bash
-dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
+dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
 ```
 
 Pour construire l'installeur (il faut [Inno Setup 6](https://jrsoftware.org/isdl.php)) :

@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot
 $project = Join-Path $root 'src\MinecraftServerMaker'
 
-dotnet publish $project -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o (Join-Path $root 'publish')
+dotnet publish $project -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o (Join-Path $root 'publish')
 if ($LASTEXITCODE -ne 0) { throw 'La publication a échoué.' }
 
 $version = (dotnet msbuild $project -getProperty:Version).Trim()
