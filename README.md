@@ -25,6 +25,10 @@ Je l'ai faite pour jouer entre potes sans passer une soirée à installer Forge,
 - Une **clé API CurseForge**, gratuite, à créer sur [console.curseforge.com](https://console.curseforge.com). Une clé toute neuve peut mettre un peu de temps avant d'avoir accès à la recherche par nom : en attendant, colle le lien du modpack ou son Project ID.
 - Assez de RAM pour le modpack (6 à 8 Go pour un gros pack).
 
+## Installation
+
+Lance `MinecraftServerMaker-Setup-<version>.exe` : l'installation se fait pour ton compte, sans droits administrateur, avec un raccourci dans le menu Démarrer (et sur le bureau si tu le coches). La désinstallation garde tes serveurs et tes réglages.
+
 ## Utilisation
 
 1. Lance `MinecraftServerMaker.exe` et colle ta clé API.
@@ -56,6 +60,14 @@ Pour obtenir un seul `.exe` qui marche sans rien installer :
 ```bash
 dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
 ```
+
+Pour construire l'installeur (il faut [Inno Setup 6](https://jrsoftware.org/isdl.php)) :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installeruild.ps1
+```
+
+L'icône et les images de l'installeur sont dessinées par `tools/AssetGen` (`dotnet run --project tools/AssetGen` pour les regénérer).
 
 Le code est rangé dans `src/MinecraftServerMaker` : `Core/` pour la logique (CurseForge, téléchargements, Java, construction des serveurs) et `UI/` pour les fenêtres.
 
