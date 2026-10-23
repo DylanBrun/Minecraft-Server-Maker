@@ -14,6 +14,7 @@ Je l'ai faite pour jouer entre potes sans passer une soirée à installer Forge,
 - **Plusieurs serveurs** : une liste pour passer de l'un à l'autre, et un bouton pour en supprimer un (avec confirmation).
 - **Ajout de mods** compatibles avec la version de Minecraft et le loader du serveur, avec leurs dépendances. Les mods déjà présents ne sont jamais mis à jour.
 - **Les adresses pour se connecter** s'affichent pendant que le serveur tourne : réseau local, Radmin VPN, ZeroTier, Internet.
+- **La RAM de chaque serveur** se règle avec une jauge ou en tapant un nombre (bouton Réglages…). Le bouton Max propose le maximum sans risque pour le PC : la RAM totale moins 8 Go pour Windows et le jeu.
 - **Une console** pour taper des commandes au serveur (`op Pseudo`, `list`, `say Salut`…).
 - **Options** (menu Fichier > Paramètres) : réduire l'app au lancement du serveur, et lancer Radmin VPN automatiquement. Les deux sont désactivées par défaut.
 

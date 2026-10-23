@@ -12,8 +12,9 @@ partial class MainForm
         // Anciennes installs sans version connue : Java du système.
         string? javaBin = settings.McVersion == "" ? null : await Java.Ensure(Java.MajorFor(settings.McVersion));
         online = false;
-        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart);
-        Log($"Démarrage : {script}");
+        int ramMb = ServerConfig.Load(settings.ServerDir).RamMb;
+        server = Launch(script, javaBin, () => Ui(() => { Log("Serveur arrêté."); UpdateUi(); }), nogui: settings.HideOnStart, ramMb);
+        Log($"Démarrage : {script}" + (ramMb > 0 ? $" ({ramMb / 1024.0:0.#} Go de RAM)" : ""));
         if (settings.HideOnStart) HideToTray("Le serveur démarre en arrière-plan.");
         // Le serveur tourne déjà : un souci avec Radmin est signalé sans interrompre la suite.
         if (settings.AutoRadmin)
@@ -23,9 +24,9 @@ partial class MainForm
     }
 
     // Lance un .bat en arrière-plan avec le bon Java en tête du PATH ; sa sortie va dans le journal.
-    Process Launch(string script, string? javaBin, Action? onExit = null, bool nogui = false)
+    Process Launch(string script, string? javaBin, Action? onExit = null, bool nogui = false, int ramMb = 0)
     {
-        var p = new Process { StartInfo = ServerFiles.StartInfo(script, javaBin, nogui), EnableRaisingEvents = true };
+        var p = new Process { StartInfo = ServerFiles.StartInfo(script, javaBin, nogui, ramMb), EnableRaisingEvents = true };
         p.OutputDataReceived += (_, e) => OnServerLine(e.Data);
         p.ErrorDataReceived += (_, e) => OnServerLine(e.Data);
         if (onExit != null) p.Exited += (_, _) => onExit();

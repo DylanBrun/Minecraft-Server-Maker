@@ -28,6 +28,17 @@ partial class MainForm
         return Task.CompletedTask;
     }
 
+    Task OpenSettings()
+    {
+        using var form = new ServerSettingsForm(settings.ServerDir);
+        if (form.ShowDialog(this) == DialogResult.OK)
+        {
+            form.Config.Save(settings.ServerDir);
+            Log(form.Config.RamMb > 0 ? $"RAM du serveur : {form.Config.RamMb / 1024.0:0.#} Go (au prochain lancement)." : "RAM du serveur : choisie par le modpack.");
+        }
+        return Task.CompletedTask;
+    }
+
     async Task DeleteServer()
     {
         if (servers.SelectedItem is not ServerItem s) return;

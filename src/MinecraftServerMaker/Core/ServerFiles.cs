@@ -20,7 +20,8 @@ static partial class ServerFiles
         line != null && (line.Contains("rash report") && line.Contains("saved to") || line.Contains("Failed to start the minecraft server"));
 
     // nogui : pas de fenêtre "Minecraft server" (transmis au jar par les scripts qui relaient %*, comme le run.bat de Forge).
-    public static ProcessStartInfo StartInfo(string script, string? javaBin, bool nogui = false)
+    // ramMb > 0 : RAM imposée au serveur, quels que soient les réglages du modpack.
+    public static ProcessStartInfo StartInfo(string script, string? javaBin, bool nogui = false, int ramMb = 0)
     {
         // Guillemets extérieurs : cmd /c retire la première et la dernière, il reste "script.bat" nogui.
         var psi = new ProcessStartInfo("cmd.exe", $"/c \"\"{Path.GetFileName(script)}\"{(nogui ? " nogui" : "")}\"")
@@ -35,6 +36,7 @@ static partial class ServerFiles
             psi.Environment["PATH"] = javaBin + ";" + psi.Environment["PATH"];
             psi.Environment["JAVA_HOME"] = Path.GetDirectoryName(javaBin);
         }
+        if (ramMb > 0) psi.Environment["_JAVA_OPTIONS"] = Memory.JavaOptions(ramMb);
         return psi;
     }
 
