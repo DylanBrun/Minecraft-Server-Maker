@@ -45,7 +45,11 @@ class ModsForm : Form
         });
     }
 
-    void Log(string line) => log.AppendText(line + Environment.NewLine);
+    void Log(string line)
+    {
+        AppLog.Write("[mods] " + line);
+        log.AppendText(line + Environment.NewLine);
+    }
 
     async Task Busy(Func<Task> action)
     {

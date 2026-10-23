@@ -39,6 +39,7 @@ Tout est rangé dans `%AppData%\MCServerTray` :
 
 - `servers\` : un dossier par serveur (monde, mods, configs, crash-reports…). Le menu Fichier > « Ouvrir le dossier du serveur » y mène directement.
 - `java\` : les versions de Java téléchargées par l'app.
+- `logs\` : le journal de l'app, un fichier par jour, gardé 14 jours (menu Fichier > « Ouvrir les journaux de l'app »). Utile pour comprendre un problème après coup.
 - `settings.json` : les réglages. La clé API y est chiffrée avec DPAPI, elle n'est lisible que par ton compte Windows sur ce PC.
 
 ## Compiler depuis les sources

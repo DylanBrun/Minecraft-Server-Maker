@@ -64,7 +64,7 @@ partial class MainForm
         }
         Ui(() =>
         {
-            Log(line);
+            Log(line, fromServer: true);
             if (!online && line.Contains("Done (") && line.Contains("help"))
             {
                 online = true;
