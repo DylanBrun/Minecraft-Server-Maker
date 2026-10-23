@@ -10,4 +10,8 @@
     <Product>Minecraft Server Maker</Product>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MinecraftServerMaker.Tests" />
+  </ItemGroup>
+
 </Project>
