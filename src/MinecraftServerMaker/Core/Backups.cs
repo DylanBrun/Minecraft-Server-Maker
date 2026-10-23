@@ -43,6 +43,21 @@ static class Backups
         return zip;
     }
 
+    // Copie pendant que le serveur tourne : il enregistre tout (save-all flush), puis n'écrit plus rien jusqu'à la fin
+    // de la copie (save-off / save-on), pour que le zip contienne un monde cohérent. save-on part même si la copie échoue.
+    // saved se termine quand la console affiche la fin de l'enregistrement ; au-delà de saveTimeout on copie quand même.
+    public static async Task<string> CreateWhileRunning(Action<string> send, Task saved, TimeSpan saveTimeout, Func<string> createZip)
+    {
+        send("save-off");
+        try
+        {
+            send("save-all flush");
+            await Task.WhenAny(saved, Task.Delay(saveTimeout));
+            return await Task.Run(createZip);
+        }
+        finally { send("save-on"); }
+    }
+
     // Supprime les copies les plus anciennes au-delà de "keep".
     public static void Prune(string dir, int keep)
     {
