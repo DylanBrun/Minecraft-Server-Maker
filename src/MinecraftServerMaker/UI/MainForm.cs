@@ -97,6 +97,11 @@ partial class MainForm : Form
         {
             if (Directory.Exists(settings.ServerDir)) Process.Start(new ProcessStartInfo(settings.ServerDir) { UseShellExecute = true });
         });
+        file.DropDownItems.Add("Ouvrir les journaux de l'app", null, (_, _) =>
+        {
+            Directory.CreateDirectory(AppLog.Dir);
+            Process.Start(new ProcessStartInfo(AppLog.Dir) { UseShellExecute = true });
+        });
         var hideOnStart = new ToolStripMenuItem("Réduire dans la barre des tâches au lancement du serveur")
             { CheckOnClick = true, Checked = settings.HideOnStart };
         hideOnStart.CheckedChanged += (_, _) => { settings.HideOnStart = hideOnStart.Checked; settings.Save(); };
@@ -210,8 +215,10 @@ partial class MainForm : Form
         finally { busy = false; UpdateUi(); }
     }
 
-    void Log(string line)
+    // fromServer : ligne de la console du serveur, déjà dans ses propres logs, donc pas recopiée dans le journal de l'app.
+    void Log(string line, bool fromServer = false)
     {
+        if (!fromServer) AppLog.Write(line);
         if (log.TextLength > 200_000) log.Text = log.Text[^100_000..];
         log.AppendText(line + Environment.NewLine);
     }
