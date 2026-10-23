@@ -131,6 +131,9 @@ partial class MainForm : Form
 
         Theme.Apply(this);
         Theme.StyleMenu(menu);
+        Theme.MatchHeight(search, searchBtn);
+        Theme.MatchHeight(versions, createBtn);
+        Theme.MatchHeight(servers, deleteBtn, modsBtn, settingsBtn);
         addresses.BackColor = Theme.Background;
         addresses.ForeColor = Theme.Muted;
 

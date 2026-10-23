@@ -56,7 +56,17 @@ static class Theme
             case ComboBox cb: cb.BackColor = Input; cb.ForeColor = Text; cb.FlatStyle = FlatStyle.Flat; break;
             case NumericUpDown n: n.BackColor = Input; n.ForeColor = Text; n.BorderStyle = BorderStyle.FixedSingle; break;
             case ListBox l: l.BackColor = Input; l.ForeColor = Text; l.BorderStyle = BorderStyle.None; break;
-            case CheckBox ch: ch.ForeColor = Text; ch.Cursor = Cursors.Hand; break;
+            case CheckBox ch:
+                // Case plate et sombre : centrée verticalement sur son texte, contrairement à la case Windows.
+                ch.FlatStyle = FlatStyle.Flat;
+                ch.FlatAppearance.BorderColor = BorderHover;
+                ch.FlatAppearance.CheckedBackColor = AccentHover;
+                ch.FlatAppearance.MouseOverBackColor = Input;
+                ch.CheckAlign = ContentAlignment.MiddleLeft;
+                ch.TextAlign = ContentAlignment.MiddleLeft;
+                ch.ForeColor = Text;
+                ch.Cursor = Cursors.Hand;
+                break;
             case GroupBox gb: gb.ForeColor = Text; break; // sinon Windows dessine le titre en gris foncé, illisible sur le fond sombre
             case ToolStrip ts: StyleMenu(ts); break;
         }
@@ -94,6 +104,24 @@ static class Theme
         b.Font = Strong;
         b.Cursor = Cursors.Hand;
         b.Padding = new Padding(6, 1, 6, 1);
+    }
+
+    // Donne aux boutons la hauteur du champ de saisie de leur ligne, et les aligne sur lui.
+    // Suit les changements de taille du champ (mise à l'échelle de l'écran).
+    public static void MatchHeight(Control field, params Button[] buttons)
+    {
+        void Apply()
+        {
+            foreach (var b in buttons)
+            {
+                b.AutoSize = false;
+                b.Padding = Padding.Empty; // à la hauteur d'un champ, la marge intérieure rognerait le texte
+                b.Size = new Size(TextRenderer.MeasureText(b.Text, b.Font).Width + 26, field.Height);
+                b.Margin = new Padding(b.Margin.Left, field.Margin.Top, b.Margin.Right, field.Margin.Bottom);
+            }
+        }
+        field.SizeChanged += (_, _) => Apply();
+        Apply();
     }
 
     // Barre de titre sombre (Windows 10 1809+ et Windows 11) ; sans effet ailleurs.
