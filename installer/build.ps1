@@ -1,5 +1,5 @@
 ﻿# Construit l'installeur : publie l'exe autonome, puis compile installer\MinecraftServerMaker.iss.
-# Résultat : publish\MinecraftServerMaker-Setup-<version>.exe et publish\MinecraftServerMaker-portable.exe (l'app seule, sans installation).
+# Résultat : publish\MinecraftServerMaker-Setup-<version>.exe et publish\MinecraftServerMaker-<version>-portable.exe (l'app seule, sans installation).
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot
 $project = Join-Path $root 'src\MinecraftServerMaker'
@@ -15,4 +15,4 @@ if (-not $iscc) { throw 'Inno Setup 6 est introuvable : https://jrsoftware.org/i
 & $iscc "/DAppVersion=$version" (Join-Path $PSScriptRoot 'MinecraftServerMaker.iss')
 if ($LASTEXITCODE -ne 0) { throw "La compilation de l'installeur a échoué." }
 
-Copy-Item (Join-Path $root 'publish\MinecraftServerMaker.exe') (Join-Path $root 'publish\MinecraftServerMaker-portable.exe') -Force
+Copy-Item (Join-Path $root 'publish\MinecraftServerMaker.exe') (Join-Path $root "publish\MinecraftServerMaker-$version-portable.exe") -Force
