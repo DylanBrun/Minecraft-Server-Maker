@@ -1,6 +1,6 @@
 static class Java
 {
-    // shortcut: table fixe des versions Java de Mojang ; à compléter si une future version de MC exige plus récent.
+    // Limite : table fixe des versions Java de Mojang ; à compléter si une future version de MC exige plus récent.
     public static int MajorFor(string mcVersion)
     {
         var v = Version.TryParse(mcVersion, out var x) ? x : new Version(99, 0);

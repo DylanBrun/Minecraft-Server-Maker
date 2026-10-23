@@ -103,7 +103,7 @@ static class ServerBuilder
         throw new Exception("Le serveur plante toujours après 10 essais.");
     }
 
-    // shortcut: se fie aux étiquettes Client/Server de CurseForge ; les mods côté joueur non étiquetés sont rattrapés par TrialBoot.
+    // Limite : se fie aux étiquettes Client/Server de CurseForge ; les mods côté joueur non étiquetés sont rattrapés par TrialBoot.
     static bool ClientOnly(JsonNode f)
     {
         var tags = f["gameVersions"]!.AsArray().Select(v => v!.GetValue<string>()).ToList();
@@ -132,7 +132,7 @@ static class ServerBuilder
             return;
         }
 
-        // shortcut: Forge très ancien (≤ 1.7.10, autre nommage) et Quilt non gérés.
+        // Limite : Forge très ancien (≤ 1.7.10, autre nommage) et Quilt non gérés.
         string url = kind switch
         {
             "forge" => $"https://maven.minecraftforge.net/net/minecraftforge/forge/{mc}-{ver}/forge-{mc}-{ver}-installer.jar",

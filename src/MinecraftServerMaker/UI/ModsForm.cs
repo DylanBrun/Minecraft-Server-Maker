@@ -9,11 +9,11 @@ class ModsForm : Form
 
     public ModsForm(CurseForge api, string root, string mc, int loader)
     {
-        Text = $"Ajouter des mods — {Path.GetFileName(root)}";
+        Text = $"Ajouter des mods - {Path.GetFileName(root)}";
         ClientSize = new Size(520, 480);
         StartPosition = FormStartPosition.CenterParent;
 
-        var info = new Label { Text = $"Minecraft {mc} — {ServerFiles.LoaderNames[loader]} : seuls les mods compatibles sont proposés.", AutoSize = true, Margin = new Padding(3, 3, 3, 6) };
+        var info = new Label { Text = $"Minecraft {mc} {ServerFiles.LoaderNames[loader]} : seuls les mods compatibles sont proposés.", AutoSize = true, Margin = new Padding(3, 3, 3, 6) };
         var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
         top.Controls.AddRange([info, search, searchBtn]);
         top.SetFlowBreak(info, true);
