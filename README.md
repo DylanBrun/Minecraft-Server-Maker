@@ -64,7 +64,7 @@ dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -
 Pour construire l'installeur (il faut [Inno Setup 6](https://jrsoftware.org/isdl.php)) :
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File installeruild.ps1
+powershell -ExecutionPolicy Bypass -File installer\build.ps1
 ```
 
 L'icône et les images de l'installeur sont dessinées par `tools/AssetGen` (`dotnet run --project tools/AssetGen` pour les regénérer).
