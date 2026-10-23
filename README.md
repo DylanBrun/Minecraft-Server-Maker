@@ -56,13 +56,11 @@ dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -
 
 Le code est rangé dans `src/MinecraftServerMaker` : `Core/` pour la logique (CurseForge, téléchargements, Java, construction des serveurs) et `UI/` pour les fenêtres.
 
-Un auto-test vérifie la logique de l'app sans toucher au réseau :
+Les tests (xUnit, sans réseau) sont dans `tests/MinecraftServerMaker.Tests` :
 
 ```bash
-MinecraftServerMaker.exe --selftest
+dotnet test
 ```
-
-Il ne renvoie rien si tout va bien, et un code d'erreur sinon.
 
 ## Bon à savoir
 
