@@ -4,33 +4,18 @@ partial class MainForm : Form
     readonly Settings settings = Settings.Load();
 
     readonly TextBox apiKey = new() { Width = 360, UseSystemPasswordChar = true };
-
-    readonly TextBox search = new() { Width = 280, PlaceholderText = "Nom, lien CurseForge ou Project ID" };
-
+    readonly TextBox search = new() { Width = 300, PlaceholderText = "Nom, lien CurseForge ou Project ID" };
     readonly Button searchBtn = new() { Text = "Rechercher", AutoSize = true };
-
-    readonly ComboBox packs = new() { Width = 500, DropDownStyle = ComboBoxStyle.DropDownList };
-
+    readonly ComboBox packs = new() { Width = 520, DropDownStyle = ComboBoxStyle.DropDownList };
     readonly ComboBox versions = new() { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
-
-    readonly Button createBtn = new() { Text = "Créer le serveur", AutoSize = true };
-
+    readonly Button createBtn = new() { Text = "Créer le serveur", AutoSize = true, Tag = "primary" };
     readonly CheckBox buildBox = new() { Text = "Sans server pack (construire depuis la dernière version joueur)", AutoSize = true };
-
-    readonly ComboBox servers = new() { Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
-
-    readonly Button deleteBtn = new() { Text = "Supprimer", AutoSize = true };
-
+    readonly ComboBox servers = new() { Width = 220, DropDownStyle = ComboBoxStyle.DropDownList };
+    readonly Button deleteBtn = new() { Text = "Supprimer", AutoSize = true, Tag = "danger" };
     readonly Button modsBtn = new() { Text = "Ajouter des mods…", AutoSize = true };
     readonly Button settingsBtn = new() { Text = "Réglages…", AutoSize = true };
-
-    readonly Button power = new()
-    {
-        Size = new Size(220, 220), FlatStyle = FlatStyle.Flat, ForeColor = Color.White,
-        Font = new Font("Segoe UI", 22, FontStyle.Bold), Anchor = AnchorStyles.None, Cursor = Cursors.Hand,
-    };
-
-    readonly Label status = new() { Dock = DockStyle.Bottom, Height = 28, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+    readonly PowerButton power = new() { Size = new Size(220, 220), Anchor = AnchorStyles.None };
+    readonly Label status = new() { Dock = DockStyle.Bottom, Height = 30, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI Semibold", 10.5f) };
 
     // TextBox en lecture seule plutôt qu'un Label : on peut sélectionner et copier une adresse.
     readonly TextBox addresses = new()
@@ -38,17 +23,11 @@ partial class MainForm : Form
         Dock = DockStyle.Bottom, Multiline = true, ReadOnly = true, BorderStyle = BorderStyle.None,
         TextAlign = HorizontalAlignment.Center, Visible = false, TabStop = false,
     };
-
-    readonly TextBox log = new() { Dock = DockStyle.Bottom, Height = 170, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Consolas", 8.5f) };
-
-    readonly TextBox command = new() { Dock = DockStyle.Bottom, Font = new Font("Consolas", 9f), PlaceholderText = "Commande serveur (ex : op Pseudo, list, say Salut) puis Entrée" };
-
-    readonly NotifyIcon tray = new() { Icon = SystemIcons.Application, Visible = true };
-
+    readonly TextBox log = new() { Dock = DockStyle.Bottom, Height = 170, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = Theme.Mono };
+    readonly TextBox command = new() { Dock = DockStyle.Bottom, Font = Theme.Mono, PlaceholderText = "Commande serveur (ex : op Pseudo, list, say Salut) puis Entrée" };
+    readonly NotifyIcon tray = new() { Icon = Theme.AppIcon, Visible = true };
     readonly ToolStripMenuItem trayToggle = new();
-
     Process? server;
-
     bool quitting, busy, online;
 
     bool IsRunning => server is { HasExited: false };
@@ -56,40 +35,30 @@ partial class MainForm : Form
     public MainForm()
     {
         Text = "Minecraft Server Maker";
-        Icon = SystemIcons.Application;
-        ClientSize = new Size(620, 660);
-        MinimumSize = new Size(620, 620);
+        ClientSize = new Size(730, 760);
+        MinimumSize = new Size(730, 700);
         apiKey.Text = settings.ApiKey;
 
-        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(8) };
+        // Carte des réglages de création et de choix du serveur, posée sur le fond avec une marge.
+        var top = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(10), BackColor = Theme.Surface };
         top.Controls.AddRange([Lbl("Clé API CurseForge :"), apiKey, Lbl("Modpack :"), search, searchBtn, packs, Lbl("Version Minecraft :"), versions, createBtn, buildBox, Lbl("Serveur :"), servers, deleteBtn, modsBtn, settingsBtn]);
         top.SetFlowBreak(buildBox, true);
         top.SetFlowBreak(createBtn, true);
         top.SetFlowBreak(apiKey, true);
         top.SetFlowBreak(searchBtn, true);
         top.SetFlowBreak(packs, true);
+        var card = new Panel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(14, 12, 14, 0) };
+        card.Controls.Add(top);
 
         var center = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 1 };
         center.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         center.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         center.Controls.Add(power);
-        // Recalculé à chaque redimensionnement : la mise à l'échelle DPI ne garde pas le bouton carré.
-        power.SizeChanged += (_, _) =>
-        {
-            int d = Math.Min(power.Width, power.Height);
-            using var round = new GraphicsPath();
-            round.AddEllipse((power.Width - d) / 2, (power.Height - d) / 2, d, d);
-            power.Region = new Region(round);
-        };
-        power.FlatAppearance.BorderSize = 0;
         // Le bouton suit la place disponible (la liste d'adresses en prend quand le serveur tourne).
         center.SizeChanged += (_, _) =>
         {
-            int d = Math.Clamp(Math.Min(center.ClientSize.Width, center.ClientSize.Height) - 16, 90, 240);
+            int d = Math.Clamp(Math.Min(center.ClientSize.Width, center.ClientSize.Height) - 10, 110, 260);
             power.Size = new Size(d, d);
-            var old = power.Font;
-            power.Font = new Font(old.FontFamily, d / 7.5f, FontStyle.Bold, GraphicsUnit.Pixel);
-            old.Dispose();
         };
 
         var file = new ToolStripMenuItem("&Fichier");
@@ -117,7 +86,7 @@ partial class MainForm : Form
         menuBar.Items.Add(file);
         MainMenuStrip = menuBar;
 
-        Controls.AddRange([center, addresses, status, log, command, top, menuBar]); // ordre inverse du docking
+        Controls.AddRange([center, addresses, status, log, command, card, Header(), menuBar]); // ordre inverse du docking
         command.KeyDown += (_, e) =>
         {
             if (e.KeyCode != Keys.Enter || command.Text.Trim() == "" || server is not { HasExited: false } p) return;
@@ -160,6 +129,11 @@ partial class MainForm : Form
         settingsBtn.Click += async (_, _) => await Run(OpenSettings);
         backupTimer.Tick += (_, _) => _ = BackupNow();
 
+        Theme.Apply(this);
+        Theme.StyleMenu(menu);
+        addresses.BackColor = Theme.Background;
+        addresses.ForeColor = Theme.Muted;
+
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
         RefreshServers();
         UpdateUi();
@@ -172,7 +146,26 @@ partial class MainForm : Form
         Close();
     }
 
-    static Label Lbl(string text) => new() { Text = text, AutoSize = true, Margin = new Padding(3, 7, 3, 3) };
+    static Label Lbl(string text) => new() { Text = text, AutoSize = true, Margin = new Padding(3, 7, 3, 3), ForeColor = Theme.Muted };
+
+    // Bandeau du haut : logo, nom de l'app et un léger dégradé souligné de vert.
+    static Panel Header()
+    {
+        var header = new Panel { Dock = DockStyle.Top, Height = 66 };
+        header.Paint += (_, e) =>
+        {
+            using var fill = new System.Drawing.Drawing2D.LinearGradientBrush(header.ClientRectangle, Theme.Surface, Theme.Background, 0f);
+            e.Graphics.FillRectangle(fill, header.ClientRectangle);
+            using var line = new SolidBrush(Theme.Accent);
+            e.Graphics.FillRectangle(line, 0, header.Height - 2, header.Width, 2);
+        };
+        header.Resize += (_, _) => header.Invalidate();
+        var logo = new PictureBox { Image = Theme.Logo, SizeMode = PictureBoxSizeMode.Zoom, Size = new Size(44, 44), Location = new Point(14, 10), BackColor = Color.Transparent };
+        var title = new Label { Text = "Minecraft Server Maker", Font = Theme.Title, AutoSize = true, Location = new Point(64, 10), BackColor = Color.Transparent, ForeColor = Theme.Text };
+        var subtitle = new Label { Text = "Ton serveur moddé, en un clic", AutoSize = true, Location = new Point(66, 37), BackColor = Color.Transparent, ForeColor = Theme.Muted };
+        header.Controls.AddRange([logo, title, subtitle]);
+        return header;
+    }
 
     // Cache toutes les fenêtres de l'app ; elle reste accessible par l'icône près de l'horloge.
     void HideToTray(string message)
@@ -186,7 +179,7 @@ partial class MainForm : Form
         bool running = IsRunning, hasServer = ServerFiles.FindStartScript(settings.ServerDir) != null;
         power.Enabled = !busy && hasServer;
         power.Text = running ? "ARRÊTER" : "LANCER";
-        power.BackColor = !power.Enabled ? Color.Gainsboro : running ? Color.Firebrick : Color.ForestGreen;
+        power.Running = running;
         searchBtn.Enabled = createBtn.Enabled = buildBox.Enabled = !busy;
         servers.Enabled = deleteBtn.Enabled = !busy && !running;
         modsBtn.Enabled = settingsBtn.Enabled = !busy && hasServer;
@@ -199,6 +192,7 @@ partial class MainForm : Form
             : running ? (online ? "En ligne ✔" : "Démarrage…")
             : hasServer ? $"Arrêté — {Path.GetFileName(settings.ServerDir)}"
             : "Aucun serveur : choisissez un modpack et créez-le";
+        status.ForeColor = busy || (running && !online) ? Theme.Warning : running ? Theme.Accent : Theme.Muted;
         var tip = "Minecraft : " + status.Text;
         tray.Text = tip.Length > 63 ? tip[..63] : tip;
     }

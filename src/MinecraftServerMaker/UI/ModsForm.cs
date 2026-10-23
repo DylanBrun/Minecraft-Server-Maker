@@ -4,13 +4,12 @@ class ModsForm : Form
     readonly TextBox search = new() { Width = 330, PlaceholderText = "Nom, lien CurseForge ou Project ID du mod" };
     readonly Button searchBtn = new() { Text = "Rechercher", AutoSize = true };
     readonly ListBox results = new() { Dock = DockStyle.Fill, IntegralHeight = false };
-    readonly Button installBtn = new() { Text = "Installer le mod sélectionné", AutoSize = true };
+    readonly Button installBtn = new() { Text = "Installer le mod sélectionné", AutoSize = true, Tag = "primary" };
     readonly TextBox log = new() { Dock = DockStyle.Bottom, Height = 150, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Font = new Font("Consolas", 8.5f) };
 
     public ModsForm(CurseForge api, string root, string mc, int loader)
     {
         Text = $"Ajouter des mods — {Path.GetFileName(root)}";
-        Icon = SystemIcons.Application;
         ClientSize = new Size(520, 480);
         StartPosition = FormStartPosition.CenterParent;
 
@@ -24,6 +23,7 @@ class ModsForm : Form
 
         search.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; searchBtn.PerformClick(); } };
         results.DoubleClick += (_, _) => installBtn.PerformClick();
+        Theme.Apply(this);
         searchBtn.Click += async (_, _) => await Busy(async () =>
         {
             results.Items.Clear();
