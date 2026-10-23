@@ -56,17 +56,7 @@ static class Theme
             case ComboBox cb: cb.BackColor = Input; cb.ForeColor = Text; cb.FlatStyle = FlatStyle.Flat; break;
             case NumericUpDown n: n.BackColor = Input; n.ForeColor = Text; n.BorderStyle = BorderStyle.FixedSingle; break;
             case ListBox l: l.BackColor = Input; l.ForeColor = Text; l.BorderStyle = BorderStyle.None; break;
-            case CheckBox ch:
-                // Case plate et sombre : centrée verticalement sur son texte, contrairement à la case Windows.
-                ch.FlatStyle = FlatStyle.Flat;
-                ch.FlatAppearance.BorderColor = BorderHover;
-                ch.FlatAppearance.CheckedBackColor = AccentHover;
-                ch.FlatAppearance.MouseOverBackColor = Input;
-                ch.CheckAlign = ContentAlignment.MiddleLeft;
-                ch.TextAlign = ContentAlignment.MiddleLeft;
-                ch.ForeColor = Text;
-                ch.Cursor = Cursors.Hand;
-                break;
+            case CheckBox ch: StyleCheckBox(ch); break;
             case GroupBox gb: gb.ForeColor = Text; break; // sinon Windows dessine le titre en gris foncé, illisible sur le fond sombre
             case ToolStrip ts: StyleMenu(ts); break;
         }
@@ -104,6 +94,53 @@ static class Theme
         b.Font = Strong;
         b.Cursor = Cursors.Hand;
         b.Padding = new Padding(6, 1, 6, 1);
+
+        // On redessine tout le bouton : Windows ajoute ses propres marges au texte et en rogne le bas
+        // quand le bouton a la hauteur d'un champ. Ici le texte est centré sur toute la hauteur.
+        bool over = false;
+        b.MouseEnter += (_, _) => { over = true; b.Invalidate(); };
+        b.MouseLeave += (_, _) => { over = false; b.Invalidate(); };
+        b.Paint += (_, e) =>
+        {
+            var rect = b.ClientRectangle;
+            using (var fill = new SolidBrush(!b.Enabled ? Surface : over ? hover : back)) e.Graphics.FillRectangle(fill, rect);
+            using (var pen = new Pen(b.Enabled ? border : Border)) e.Graphics.DrawRectangle(pen, rect.X, rect.Y, rect.Width - 1, rect.Height - 1);
+            TextRenderer.DrawText(e.Graphics, b.Text, b.Font, rect, b.Enabled ? fore : Muted,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+            if (b.Focused) ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(rect, -3, -3), fore, back);
+        };
+    }
+
+    // Case à cocher redessinée : carré et libellé centrés tous les deux sur la hauteur du contrôle.
+    static void StyleCheckBox(CheckBox ch)
+    {
+        ch.ForeColor = Text;
+        ch.Cursor = Cursors.Hand;
+        ch.MinimumSize = new Size(0, 24);
+        ch.Padding = new Padding(0, 0, 10, 0); // le libellé démarre plus à droite que sur la case Windows
+        bool over = false;
+        ch.MouseEnter += (_, _) => { over = true; ch.Invalidate(); };
+        ch.MouseLeave += (_, _) => { over = false; ch.Invalidate(); };
+        ch.CheckedChanged += (_, _) => ch.Invalidate();
+        ch.Paint += (_, e) =>
+        {
+            var g = e.Graphics;
+            g.Clear(ch.Parent?.BackColor ?? Background);
+            int box = Math.Min(16, ch.Height - 4), y = (ch.Height - box) / 2;
+            var square = new Rectangle(1, y, box, box);
+            using (var fill = new SolidBrush(ch.Checked ? Accent : over ? Border : Input)) g.FillRectangle(fill, square);
+            using (var pen = new Pen(ch.Checked ? Accent : BorderHover)) g.DrawRectangle(pen, square);
+            if (ch.Checked)
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using var tick = new Pen(OnAccent, 2f);
+                g.DrawLines(tick, [new PointF(square.X + box * 0.22f, y + box * 0.52f), new PointF(square.X + box * 0.42f, y + box * 0.72f), new PointF(square.X + box * 0.80f, y + box * 0.28f)]);
+            }
+            var textRect = new Rectangle(square.Right + 7, 0, ch.Width - square.Right - 7, ch.Height);
+            TextRenderer.DrawText(g, ch.Text, ch.Font, textRect, ch.Enabled ? Text : Muted,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+            if (ch.Focused) ControlPaint.DrawFocusRectangle(g, textRect);
+        };
     }
 
     // Donne aux boutons la hauteur du champ de saisie de leur ligne, et les aligne sur lui.
