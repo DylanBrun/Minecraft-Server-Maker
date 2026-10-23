@@ -158,6 +158,7 @@ partial class MainForm : Form
         deleteBtn.Click += async (_, _) => await Run(DeleteServer);
         modsBtn.Click += async (_, _) => await Run(OpenMods);
         settingsBtn.Click += async (_, _) => await Run(OpenSettings);
+        backupTimer.Tick += (_, _) => _ = BackupNow();
 
         if (settings.ServerDir != "") Log($"Serveur sélectionné : {settings.ServerDir}");
         RefreshServers();

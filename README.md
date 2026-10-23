@@ -15,6 +15,7 @@ Je l'ai faite pour jouer entre potes sans passer une soirée à installer Forge,
 - **Ajout de mods** compatibles avec la version de Minecraft et le loader du serveur, avec leurs dépendances. Les mods déjà présents ne sont jamais mis à jour.
 - **Les adresses pour se connecter** s'affichent pendant que le serveur tourne : réseau local, Radmin VPN, ZeroTier, Internet.
 - **La RAM de chaque serveur** se règle avec une jauge ou en tapant un nombre (bouton Réglages…). Le bouton Max propose le maximum sans risque pour le PC : la RAM totale moins 8 Go pour Windows et le jeu.
+- **Sauvegardes automatiques du monde** : une copie .zip toutes les 30 minutes pendant que le serveur tourne, les 10 dernières gardées dans le dossier `backups` du serveur. Intervalle et nombre de copies se règlent dans Réglages…, et un opérateur peut les piloter depuis le chat du jeu avec `!ASWorld enable`, `!ASWorld disable` ou `!ASWorld set <minutes>`.
 - **Une console** pour taper des commandes au serveur (`op Pseudo`, `list`, `say Salut`…).
 - **Options** (menu Fichier > Paramètres) : réduire l'app au lancement du serveur, et lancer Radmin VPN automatiquement. Les deux sont désactivées par défaut.
 

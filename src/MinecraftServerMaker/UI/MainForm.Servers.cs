@@ -34,6 +34,8 @@ partial class MainForm
         if (form.ShowDialog(this) == DialogResult.OK)
         {
             form.Config.Save(settings.ServerDir);
+            if (online) StartBackupTimer();
+            Log(form.Config.AutoBackup ? $"Sauvegardes automatiques : toutes les {form.Config.BackupMinutes} min, {form.Config.BackupsToKeep} gardées." : "Sauvegardes automatiques désactivées.");
             Log(form.Config.RamMb > 0 ? $"RAM du serveur : {form.Config.RamMb / 1024.0:0.#} Go (au prochain lancement)." : "RAM du serveur : choisie par le modpack.");
         }
         return Task.CompletedTask;
