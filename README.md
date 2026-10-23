@@ -51,8 +51,10 @@ dotnet build
 Pour obtenir un seul `.exe` qui marche sans rien installer :
 
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
+dotnet publish src/MinecraftServerMaker -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
 ```
+
+Le code est rangé dans `src/MinecraftServerMaker` : `Core/` pour la logique (CurseForge, téléchargements, Java, construction des serveurs) et `UI/` pour les fenêtres.
 
 Un auto-test vérifie la logique de l'app sans toucher au réseau :
 
