@@ -25,6 +25,24 @@ static class ChatCommands
         catch (Exception e) when (e is IOException or JsonException or InvalidOperationException) { return false; }
     }
 
+    // Applique une commande !ASWorld aux réglages du serveur. Changed = les réglages ont été modifiés et doivent être enregistrés.
+    public static (string Reply, bool Changed) Apply(AsWorldCommand cmd, bool isOp, ServerConfig config)
+    {
+        if (!isOp) return ("Commande réservée aux opérateurs.", false);
+        switch (cmd.Action)
+        {
+            case "enable": config.AutoBackup = true; break;
+            case "disable": config.AutoBackup = false; break;
+            case "set" when int.TryParse(cmd.Argument, out var minutes) && minutes is >= 1 and <= 1440: config.BackupMinutes = minutes; break;
+            case "set": return ("Utilisation : !ASWorld set <minutes>, entre 1 et 1440.", false);
+            default:
+                return ($"Sauvegardes {(config.AutoBackup ? "activées" : "désactivées")}, toutes les {config.BackupMinutes} min. " +
+                        "Commandes : !ASWorld enable, !ASWorld disable, !ASWorld set <minutes>.", false);
+        }
+        var state = config.AutoBackup ? $"activées, toutes les {config.BackupMinutes} min" : "désactivées";
+        return ($"Sauvegardes automatiques {state}.", true);
+    }
+
     // Message privé en jeu (tellraw existe depuis Minecraft 1.7).
     public static string Tell(string player, string text) =>
         $"tellraw {player} {JsonSerializer.Serialize(new { text = "[ASWorld] " + text, color = "gold" })}";
