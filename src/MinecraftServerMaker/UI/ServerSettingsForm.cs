@@ -18,7 +18,7 @@ class ServerSettingsForm : Form
     public ServerSettingsForm(string root)
     {
         Config = ServerConfig.Load(root);
-        Text = $"Réglages du serveur — {Path.GetFileName(root)}";
+        Text = $"Réglages du serveur - {Path.GetFileName(root)}";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
@@ -33,7 +33,7 @@ class ServerSettingsForm : Form
         box.Minimum = 1;
         box.Maximum = slider.Maximum * StepMb / 1024m;
         info.Text = $"RAM du PC : {totalMb / 1024.0:0.#} Go. Maximum conseillé : {box.Maximum:0.#} Go " +
-                    "(8 Go restent pour Windows et pour le jeu si tu joues sur ce PC). Pris en compte au prochain lancement.";
+                    "(8 Go restent pour Windows et pour le jeu si vous jouez sur ce PC). Pris en compte au prochain lancement.";
 
         var ram = new GroupBox { Text = "Mémoire (RAM) du serveur", Padding = new Padding(10), Dock = DockStyle.Top, Height = 200 };
         var layout = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, Dock = DockStyle.Fill, WrapContents = false };

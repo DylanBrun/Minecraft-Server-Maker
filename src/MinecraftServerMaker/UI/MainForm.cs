@@ -165,7 +165,7 @@ partial class MainForm : Form
         header.Resize += (_, _) => header.Invalidate();
         var logo = new PictureBox { Image = Theme.Logo, SizeMode = PictureBoxSizeMode.Zoom, Size = new Size(44, 44), Location = new Point(14, 10), BackColor = Color.Transparent };
         var title = new Label { Text = "Minecraft Server Maker", Font = Theme.Title, AutoSize = true, Location = new Point(64, 10), BackColor = Color.Transparent, ForeColor = Theme.Text };
-        var subtitle = new Label { Text = "Ton serveur moddé, en un clic", AutoSize = true, Location = new Point(66, 37), BackColor = Color.Transparent, ForeColor = Theme.Muted };
+        var subtitle = new Label { Text = "Votre serveur moddé en un clic", AutoSize = true, Location = new Point(66, 37), BackColor = Color.Transparent, ForeColor = Theme.Muted };
         header.Controls.AddRange([logo, title, subtitle]);
         return header;
     }
@@ -193,7 +193,7 @@ partial class MainForm : Form
         status.Text = busy && running ? "Arrêt en cours…"
             : busy ? "Patientez…"
             : running ? (online ? "En ligne ✔" : "Démarrage…")
-            : hasServer ? $"Arrêté — {Path.GetFileName(settings.ServerDir)}"
+            : hasServer ? $"Arrêté - {Path.GetFileName(settings.ServerDir)}"
             : "Aucun serveur : choisissez un modpack et créez-le";
         status.ForeColor = busy || (running && !online) ? Theme.Warning : running ? Theme.Accent : Theme.Muted;
         var tip = "Minecraft : " + status.Text;
